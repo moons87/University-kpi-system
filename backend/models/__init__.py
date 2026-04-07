@@ -10,3 +10,6 @@ from .publication   import Publication
 from .patent        import Patent
 from .achievement   import Achievement
 from .project       import Project
+from .kpi_score     import KPIScore
+from .kpi_detail    import KPIDetail
+from .user          import User
