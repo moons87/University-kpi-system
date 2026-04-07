@@ -1,0 +1,191 @@
+// =======================
+// DIMENSIONS (LOOKUP TABLES)
+// =======================
+
+Table positions {
+  id int [pk, increment]
+  name varchar
+}
+
+Table degrees {
+  id int [pk, increment]
+  name varchar
+}
+
+Table departments {
+  id int [pk, increment]
+  name varchar
+}
+
+Table time_dim {
+  id int [pk, increment]
+  year int
+  semester int
+  quarter int
+}
+
+// =======================
+// MAIN ENTITY
+// =======================
+
+Table teachers {
+  id int [pk, increment]
+  full_name varchar
+  email varchar
+
+  position_id int
+  degree_id int
+  department_id int
+
+  created_at timestamp
+}
+
+// =======================
+// ACADEMIC ACTIVITIES
+// =======================
+
+Table subjects {
+  id int [pk, increment]
+  name varchar
+}
+
+Table groups {
+  id int [pk, increment]
+  name varchar
+  education_level varchar
+}
+
+Table teaching_load {
+  id int [pk, increment]
+
+  teacher_id int
+  subject_id int
+  group_id int
+  time_id int
+
+  hours int
+}
+
+// =======================
+// RESEARCH ACTIVITY
+// =======================
+
+Table publications {
+  id int [pk, increment]
+
+  teacher_id int
+  time_id int
+
+  title text
+  type varchar   // Scopus, WoS, local
+  quartile varchar  // Q1-Q4
+}
+
+Table patents {
+  id int [pk, increment]
+
+  teacher_id int
+  time_id int
+
+  title text
+  registration_number varchar
+}
+
+Table achievements {
+  id int [pk, increment]
+
+  teacher_id int
+  time_id int
+
+  title text
+  level varchar  // international, national, local
+}
+
+Table projects {
+  id int [pk, increment]
+
+  teacher_id int
+  time_id int
+
+  title text
+  funding_source varchar
+  budget decimal
+  start_date date
+  end_date date
+}
+
+// =======================
+// KPI SYSTEM
+// =======================
+
+Table kpi_scores {
+  id int [pk, increment]
+
+  teacher_id int
+  time_id int
+
+  teaching_score decimal
+  research_score decimal
+  project_score decimal
+  achievement_score decimal
+
+  total_score decimal
+}
+
+Table kpi_details {
+  id int [pk, increment]
+
+  teacher_id int
+  time_id int
+
+  category varchar   // teaching, research, project
+  metric_name varchar
+  value decimal
+  score decimal
+}
+
+// =======================
+// AUTH SYSTEM
+// =======================
+
+Table users {
+  id int [pk, increment]
+
+  teacher_id int
+  email varchar
+  password_hash text
+  role varchar  // admin, teacher
+}
+
+// =======================
+// RELATIONSHIPS
+// =======================
+
+Ref: teachers.position_id > positions.id
+Ref: teachers.degree_id > degrees.id
+Ref: teachers.department_id > departments.id
+
+Ref: teaching_load.teacher_id > teachers.id
+Ref: teaching_load.subject_id > subjects.id
+Ref: teaching_load.group_id > groups.id
+Ref: teaching_load.time_id > time_dim.id
+
+Ref: publications.teacher_id > teachers.id
+Ref: publications.time_id > time_dim.id
+
+Ref: patents.teacher_id > teachers.id
+Ref: patents.time_id > time_dim.id
+
+Ref: achievements.teacher_id > teachers.id
+Ref: achievements.time_id > time_dim.id
+
+Ref: projects.teacher_id > teachers.id
+Ref: projects.time_id > time_dim.id
+
+Ref: kpi_scores.teacher_id > teachers.id
+Ref: kpi_scores.time_id > time_dim.id
+
+Ref: kpi_details.teacher_id > teachers.id
+Ref: kpi_details.time_id > time_dim.id
+
+Ref: users.teacher_id > teachers.id
