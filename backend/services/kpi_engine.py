@@ -67,7 +67,7 @@ def calculate_kpi(year: int, semester: int, db: Session) -> dict:
     for teacher in teachers:
         tid = teacher.id
 
-        hours = tl_df[tl_df.teacher_id == tid]["hours"].sum() if not tl_df.empty else 0
+        hours = float(tl_df[tl_df.teacher_id == tid]["hours"].sum()) if not tl_df.empty else 0.0
         teaching_score = _normalize(float(hours), MAX_VALUES["hours_total"])
         details_to_insert.append(KPIDetail(teacher_id=tid, time_id=time_id, category="teaching", metric_name="hours_total", value=float(hours), score=teaching_score))
 
@@ -86,7 +86,7 @@ def calculate_kpi(year: int, semester: int, db: Session) -> dict:
 
         t_proj = proj_df[proj_df.teacher_id == tid] if not proj_df.empty else pd.DataFrame()
         proj_count  = len(t_proj)
-        proj_budget = t_proj["budget"].sum() if not t_proj.empty else 0
+        proj_budget = float(t_proj["budget"].sum()) if not t_proj.empty else 0.0
 
         pc_score = _normalize(proj_count,  MAX_VALUES["project_count"])
         pb_score = _normalize(proj_budget, MAX_VALUES["project_budget"])
