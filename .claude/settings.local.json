@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(psql -U postgres -c \"SELECT version\\(\\);\")",
+      "Bash(PGPASSWORD=\"admin\" \"/c/Program Files/PostgreSQL/17/bin/psql.exe\" -U postgres -c \"SELECT 1;\")",
+      "Bash(echo \"EXIT:$?\")",
+      "Read(//c/Users/Arlan Alimbay/AppData/Roaming/postgresql/**)",
+      "Read(//c/Users/Arlan Alimbay/**)",
+      "Read(//c/Users/Arlan Alimbay/AppData/Roaming/**)"
+    ]
+  }
+}
