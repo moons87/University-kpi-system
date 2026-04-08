@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Box, Typography, Tabs, Tab, Chip, Stack, Button,
@@ -34,7 +34,8 @@ export default function TeacherProfilePage() {
 
   // Edit dialog state
   const [formOpen,  setFormOpen]  = useState(false);
-  const [form,      setForm]      = useState({});
+  const [form,      setForm]      = useState({ full_name: '', email: '', position_id: '', degree_id: '', department_id: '' });
+  const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
@@ -42,12 +43,20 @@ export default function TeacherProfilePage() {
     getPublications({ teacher_id: id }).then(setPublications);
     getProjects({ teacher_id: id }).then(setProjects);
     getKPIScores({ teacher_id: id }).then(setKpiScores);
-    client.get('/departments').then(r => setDepartments(r.data)).catch(console.error);
-    client.get('/positions').then(r  => setPositions(r.data)).catch(console.error);
-    client.get('/degrees').then(r    => setDegrees(r.data)).catch(console.error);
   }, [id]);
 
-  const canEdit = user?.role === 'admin' || String(user?.teacher_id) === String(id);
+  const canEdit = useMemo(
+    () => user?.role === 'admin' || String(user?.teacher_id) === String(id),
+    [user, id]
+  );
+
+  useEffect(() => {
+    if (canEdit) {
+      client.get('/departments').then(r => setDepartments(r.data)).catch(console.error);
+      client.get('/positions').then(r  => setPositions(r.data)).catch(console.error);
+      client.get('/degrees').then(r    => setDegrees(r.data)).catch(console.error);
+    }
+  }, [canEdit]);
 
   const openEdit = () => {
     setForm({
@@ -64,10 +73,11 @@ export default function TeacherProfilePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
+    setSubmitting(true);
     const payload = { ...form };
-    if (!payload.position_id)   payload.position_id = null;
-    if (!payload.degree_id)     payload.degree_id = null;
-    if (!payload.department_id) payload.department_id = null;
+    if (payload.position_id === '')   payload.position_id = null;
+    if (payload.degree_id === '')     payload.degree_id = null;
+    if (payload.department_id === '') payload.department_id = null;
     try {
       await updateTeacher(id, payload);
       const updated = await getTeacher(id);
@@ -75,6 +85,8 @@ export default function TeacherProfilePage() {
       setFormOpen(false);
     } catch (err) {
       setFormError(err.response?.data?.detail || 'Error saving profile');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -174,7 +186,7 @@ export default function TeacherProfilePage() {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setFormOpen(false)}>Отмена</Button>
-            <Button type="submit" variant="contained">Сохранить</Button>
+            <Button type="submit" variant="contained" disabled={submitting}>Сохранить</Button>
           </DialogActions>
         </form>
       </Dialog>
