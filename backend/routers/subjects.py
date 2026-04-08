@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
 
 from database import get_db
-from models import Subject, User
+from models import Subject
 from schemas.subject import SubjectCreate, SubjectOut
-from auth.jwt import get_current_user
+from auth.jwt import get_current_user, require_admin
 
 router = APIRouter(prefix="/subjects", tags=["subjects"])
 
@@ -19,10 +19,8 @@ def list_subjects(db: Session = Depends(get_db), _=Depends(get_current_user)):
 def create_subject(
     body: SubjectCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    _=Depends(require_admin),
 ):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Only admins can manage subjects")
     obj = Subject(**body.model_dump())
     db.add(obj)
     db.commit()
