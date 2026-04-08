@@ -58,8 +58,11 @@ def update_teacher(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role != "admin" and current_user.teacher_id != teacher_id:
-        raise HTTPException(status_code=403, detail="You can only edit your own profile")
+    if current_user.role != "admin":
+        if current_user.teacher_id is None:
+            raise HTTPException(status_code=403, detail="Your account is not linked to a teacher record")
+        if current_user.teacher_id != teacher_id:
+            raise HTTPException(status_code=403, detail="You can only edit your own profile")
     obj = db.get(Teacher, teacher_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Teacher not found")
