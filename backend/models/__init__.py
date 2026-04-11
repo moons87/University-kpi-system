@@ -13,3 +13,6 @@ from .project       import Project
 from .kpi_score     import KPIScore
 from .kpi_detail    import KPIDetail
 from .user          import User
+from .kpi_setting   import KPISetting
+from .student       import Student
+from .student_grade import StudentGrade
