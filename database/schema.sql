@@ -160,5 +160,5 @@ CREATE TABLE users (
     email         VARCHAR(200) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role          VARCHAR(20) NOT NULL DEFAULT 'teacher'
-                  CHECK (role IN ('admin', 'teacher'))
+                  CHECK (role IN ('admin', 'teacher', 'advisor'))
 );
