@@ -3,10 +3,20 @@ import {
   Box, Typography, Card, CardContent, TextField, Button,
   Grid, Alert, Tabs, Tab, List, ListItem, ListItemText, Stack,
 } from '@mui/material';
-import { getSettings, updateSettings } from '../api/settings';
-import { getSubjects, createSubject }  from '../api/subjects';
-import { getGroups,   createGroup }    from '../api/groups';
+import { getSettings, updateSettings }   from '../api/settings';
+import { getSubjects, createSubject }    from '../api/subjects';
+import { getGroups,   createGroup }      from '../api/groups';
+import { getTimeDim,  createTimeDim }    from '../api/timeDim';
 import useAuthStore from '../store/authStore';
+
+/** Detects what the current academic semester should be */
+function detectCurrentPeriod() {
+  const now      = new Date();
+  const month    = now.getMonth() + 1;
+  const year     = now.getFullYear();
+  const semester = month >= 9 ? 1 : 2;
+  return { year, semester };
+}
 
 const DEFAULT_WEIGHTS = {
   teaching: 0.30, research: 0.35, project: 0.15, achievement: 0.20,
@@ -20,6 +30,8 @@ const DEFAULT_MAX_VALUES = {
 
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
+  const isAdmin   = user?.role === 'admin';
+  const isAdvisor = user?.role === 'advisor';
   const [tab, setTab] = useState(0);
 
   // ── KPI Settings ──
@@ -36,26 +48,35 @@ export default function SettingsPage() {
   const [newGroup,   setNewGroup]   = useState({ name: '', education_level: '' });
   const [groupError, setGroupError] = useState('');
 
+  // ── Periods ──
+  const [periods,      setPeriods]      = useState([]);
+  const [newPeriod,    setNewPeriod]    = useState(() => detectCurrentPeriod());
+  const [periodError,  setPeriodError]  = useState('');
+  const [periodMsg,    setPeriodMsg]    = useState('');
+
   useEffect(() => {
-    if (user?.role !== 'admin') return;
+    if (!isAdmin && !isAdvisor) return;
 
-    getSettings().then((data) => {
-      const dbSettings = data.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
-      const merged = {};
-      Object.keys(DEFAULT_WEIGHTS).forEach((k) => {
-        merged[`weight_${k}`] = dbSettings[`weight_${k}`] ?? DEFAULT_WEIGHTS[k];
+    if (isAdmin) {
+      getSettings().then((data) => {
+        const dbSettings = data.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
+        const merged = {};
+        Object.keys(DEFAULT_WEIGHTS).forEach((k) => {
+          merged[`weight_${k}`] = dbSettings[`weight_${k}`] ?? DEFAULT_WEIGHTS[k];
+        });
+        Object.keys(DEFAULT_MAX_VALUES).forEach((k) => {
+          merged[`max_${k}`] = dbSettings[`max_${k}`] ?? DEFAULT_MAX_VALUES[k];
+        });
+        setFormData(merged);
       });
-      Object.keys(DEFAULT_MAX_VALUES).forEach((k) => {
-        merged[`max_${k}`] = dbSettings[`max_${k}`] ?? DEFAULT_MAX_VALUES[k];
-      });
-      setFormData(merged);
-    });
+      getSubjects().then(setSubjects).catch(console.error);
+      getTimeDim().then(setPeriods).catch(console.error);
+    }
 
-    getSubjects().then(setSubjects).catch(console.error);
     getGroups().then(setGroups).catch(console.error);
-  }, [user]);
+  }, [user, isAdmin, isAdvisor]);
 
-  if (user?.role !== 'admin') {
+  if (!isAdmin && !isAdvisor) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
         <Typography variant="h5" color="error">Access Denied</Typography>
@@ -84,6 +105,22 @@ export default function SettingsPage() {
       .catch((err) => setSubjectError(err.response?.data?.detail || 'Error creating subject'));
   };
 
+  const handleAddPeriod = () => {
+    setPeriodError('');
+    setPeriodMsg('');
+    const year     = Number(newPeriod.year);
+    const semester = Number(newPeriod.semester);
+    if (!year || year < 2000 || year > 2100) { setPeriodError('Введите корректный год'); return; }
+    if (semester !== 1 && semester !== 2)     { setPeriodError('Семестр: 1 или 2');       return; }
+    createTimeDim({ year, semester })
+      .then((created) => {
+        setPeriods((prev) => [...prev, created].sort((a, b) => a.year - b.year || a.semester - b.semester));
+        setPeriodMsg(`Период ${year} — Семестр ${semester} добавлен`);
+        setNewPeriod(detectCurrentPeriod());
+      })
+      .catch((err) => setPeriodError(err.response?.data?.detail || 'Период уже существует или ошибка сервера'));
+  };
+
   const handleAddGroup = () => {
     setGroupError('');
     if (!newGroup.name.trim()) { setGroupError('Group name is required'); return; }
@@ -102,14 +139,21 @@ export default function SettingsPage() {
     <Box>
       <Typography variant="h4" mb={2}>Settings</Typography>
 
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3 }}>
-        <Tab label="KPI Settings" />
-        <Tab label="Subjects" />
-        <Tab label="Groups" />
-      </Tabs>
+      {isAdmin ? (
+        <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3 }}>
+          <Tab label="KPI Settings" />
+          <Tab label="Subjects" />
+          <Tab label="Groups" />
+          <Tab label="Периоды" />
+        </Tabs>
+      ) : (
+        <Tabs value={0} sx={{ mb: 3 }}>
+          <Tab label="Groups" />
+        </Tabs>
+      )}
 
       {/* ── KPI Settings Tab ── */}
-      {tab === 0 && (
+      {isAdmin && tab === 0 && (
         <>
           {kpiMessage && (
             <Alert severity={kpiMessage.includes('Error') ? 'error' : 'success'} sx={{ mb: 2 }}>
@@ -128,7 +172,7 @@ export default function SettingsPage() {
                       fullWidth margin="dense"
                       label={`Weight: ${k}`}
                       type="number"
-                      inputProps={{ step: '0.05' }}
+                      slotProps={{ htmlInput: { step: '0.05' } }}
                       value={formData[`weight_${k}`] ?? ''}
                       onChange={(e) => handleKpiChange(`weight_${k}`, e.target.value)}
                     />
@@ -162,7 +206,7 @@ export default function SettingsPage() {
       )}
 
       {/* ── Subjects Tab ── */}
-      {tab === 1 && (
+      {isAdmin && tab === 1 && (
         <Box>
           <Typography variant="h6" mb={2}>Subjects</Typography>
           {subjectError && <Alert severity="error" sx={{ mb: 2 }}>{subjectError}</Alert>}
@@ -186,7 +230,7 @@ export default function SettingsPage() {
       )}
 
       {/* ── Groups Tab ── */}
-      {tab === 2 && (
+      {(isAdmin ? tab === 2 : true) && (
         <Box>
           <Typography variant="h6" mb={2}>Groups</Typography>
           {groupError && <Alert severity="error" sx={{ mb: 2 }}>{groupError}</Alert>}
@@ -213,6 +257,64 @@ export default function SettingsPage() {
                 />
               </ListItem>
             ))}
+          </List>
+        </Box>
+      )}
+      {/* ── Periods Tab ── */}
+      {isAdmin && tab === 3 && (
+        <Box>
+          <Typography variant="h6" mb={0.5}>Учебные периоды</Typography>
+          <Typography variant="body2" color="text.secondary" mb={2.5}>
+            Добавьте период вручную или используйте кнопку для автоматического определения текущего семестра.
+          </Typography>
+
+          {periodError && <Alert severity="error"   sx={{ mb: 2 }} onClose={() => setPeriodError('')}>{periodError}</Alert>}
+          {periodMsg   && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setPeriodMsg('')}>{periodMsg}</Alert>}
+
+          <Stack direction="row" spacing={2} mb={1} alignItems="center" flexWrap="wrap">
+            <TextField
+              label="Год" size="small"
+              type="number"
+              value={newPeriod.year}
+              onChange={(e) => setNewPeriod((p) => ({ ...p, year: e.target.value }))}
+              sx={{ width: 120 }}
+              slotProps={{ htmlInput: { min: 2000, max: 2100 } }}
+            />
+            <TextField
+              label="Семестр" size="small"
+              type="number"
+              value={newPeriod.semester}
+              onChange={(e) => setNewPeriod((p) => ({ ...p, semester: e.target.value }))}
+              sx={{ width: 120 }}
+              slotProps={{ htmlInput: { min: 1, max: 2 } }}
+            />
+            <Button variant="contained" onClick={handleAddPeriod}>Добавить</Button>
+            <Button
+              variant="outlined"
+              onClick={() => setNewPeriod(detectCurrentPeriod())}
+              size="small"
+            >
+              Текущий период
+            </Button>
+          </Stack>
+          <Typography variant="body2" color="text.secondary" mb={2} sx={{ fontSize: '0.75rem' }}>
+            Текущий период определяется автоматически: сентябрь–декабрь → Семестр 1, январь–август → Семестр 2.
+          </Typography>
+
+          <List dense>
+            {periods.map((p) => (
+              <ListItem key={p.id}>
+                <ListItemText
+                  primary={`${p.year} — Семестр ${p.semester === 1 ? '1 (Осенний)' : '2 (Весенний)'}`}
+                  secondary={`ID: ${p.id}`}
+                />
+              </ListItem>
+            ))}
+            {periods.length === 0 && (
+              <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
+                Периодов пока нет. Добавьте первый период.
+              </Typography>
+            )}
           </List>
         </Box>
       )}
