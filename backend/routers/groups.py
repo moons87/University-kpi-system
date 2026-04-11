@@ -5,7 +5,7 @@ from typing import List
 from database import get_db
 from models import Group
 from schemas.group import GroupCreate, GroupOut
-from auth.jwt import get_current_user, require_admin
+from auth.jwt import get_current_user, require_advisor_or_admin
 
 router = APIRouter(prefix="/groups", tags=["groups"])
 
@@ -19,7 +19,7 @@ def list_groups(db: Session = Depends(get_db), _=Depends(get_current_user)):
 def create_group(
     body: GroupCreate,
     db: Session = Depends(get_db),
-    _=Depends(require_admin),
+    _=Depends(require_advisor_or_admin),
 ):
     obj = Group(**body.model_dump())
     db.add(obj)
