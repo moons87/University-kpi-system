@@ -10,6 +10,7 @@ import BarChartIcon    from '@mui/icons-material/BarChart';
 import DownloadIcon    from '@mui/icons-material/Download';
 import SettingsIcon    from '@mui/icons-material/Settings';
 import GroupsIcon      from '@mui/icons-material/Groups';
+import FileUploadIcon  from '@mui/icons-material/FileUpload';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 
@@ -17,6 +18,7 @@ const NAV = [
   { label: 'Dashboard',     icon: DashboardIcon,   path: '/',               group: 'overview' },
   { label: 'Преподаватели', icon: PeopleIcon,       path: '/teachers',       group: 'data' },
   { label: 'Студенты',     icon: GroupsIcon,       path: '/students',       group: 'data', advisorVisible: true },
+  { label: 'Импорт',       icon: FileUploadIcon,   path: '/import',         group: 'data', advisorVisible: true },
   { label: 'Нагрузка',      icon: SchoolIcon,       path: '/teaching-load',  group: 'data' },
   { label: 'Публикации',    icon: ArticleIcon,      path: '/publications',   group: 'data' },
   { label: 'Патенты',       icon: BuildIcon,        path: '/patents',        group: 'data' },
