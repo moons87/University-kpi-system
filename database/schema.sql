@@ -61,6 +61,19 @@ CREATE TABLE teachers (
 );
 
 -- =======================
+-- AUTH SYSTEM
+-- =======================
+
+CREATE TABLE users (
+    id            SERIAL PRIMARY KEY,
+    teacher_id    INT REFERENCES teachers(id),
+    email         VARCHAR(200) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role          VARCHAR(20) NOT NULL DEFAULT 'teacher'
+                  CHECK (role IN ('admin', 'teacher', 'advisor'))
+);
+
+-- =======================
 -- ACADEMIC ACTIVITIES
 -- =======================
 
@@ -149,17 +162,4 @@ CREATE TABLE kpi_details (
     metric_name VARCHAR(100) NOT NULL,
     value       DECIMAL(10, 2),
     score       DECIMAL(5, 2)
-);
-
--- =======================
--- AUTH SYSTEM
--- =======================
-
-CREATE TABLE users (
-    id            SERIAL PRIMARY KEY,
-    teacher_id    INT REFERENCES teachers(id),
-    email         VARCHAR(200) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role          VARCHAR(20) NOT NULL DEFAULT 'teacher'
-                  CHECK (role IN ('admin', 'teacher', 'advisor'))
 );
