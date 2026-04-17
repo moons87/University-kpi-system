@@ -469,3 +469,193 @@ def _write_row(sheet_type: str | None, data: dict, db: Session) -> None:
             start_date=start,
             end_date=end,
         ))
+
+
+# ── Teacher-scoped parsers (no ФИО column, teacher_id injected) ──────────────
+
+def _parse_teacher_teaching_load(df: pd.DataFrame, teacher_id: int, db: Session) -> SheetPreview:
+    rows: list[ImportRow] = []
+    for i, raw in df.iterrows():
+        row_num = int(i) + 2
+        subject_str = str(raw.get("Предмет", "")).strip()
+        group_str   = str(raw.get("Группа",  "")).strip()
+        try:
+            hours    = int(float(raw.get("Часы",    0) or 0))
+            year     = int(raw.get("Год",     0) or 0)
+            semester = int(raw.get("Семестр", 1) or 1)
+        except (ValueError, TypeError):
+            rows.append(_row_err(row_num, "Часы, Год, Семестр должны быть числами"))
+            continue
+        if not subject_str or not group_str or not hours or not year:
+            rows.append(_row_err(row_num, "Обязательные поля: Предмет, Группа, Часы, Год"))
+            continue
+        time_id    = _get_or_create_time(year, semester, db)
+        subject_id = _get_or_create_subject(subject_str, db)
+        group_id   = _get_or_create_group(group_str, db)
+        rows.append(_row_ok({"teacher_id": teacher_id, "subject_id": subject_id,
+                              "group_id": group_id, "time_id": time_id, "hours": hours}, row_num))
+    valid    = sum(1 for r in rows if r.status == "ok")
+    warnings = sum(1 for r in rows if r.status == "warning")
+    errors   = sum(1 for r in rows if r.status == "error")
+    return SheetPreview(sheet="Нагрузка", total=len(rows),
+                        valid=valid, warnings=warnings, errors=errors, rows=rows)
+
+
+def _parse_teacher_publications(df: pd.DataFrame, teacher_id: int, db: Session) -> SheetPreview:
+    rows: list[ImportRow] = []
+    for i, raw in df.iterrows():
+        row_num  = int(i) + 2
+        title    = str(raw.get("Название", "")).strip()
+        pub_type = str(raw.get("Тип",      "")).strip().lower()
+        try:
+            year     = int(raw.get("Год",     0) or 0)
+            semester = int(raw.get("Семестр", 1) or 1)
+        except (ValueError, TypeError):
+            rows.append(_row_err(row_num, "Год должен быть числом"))
+            continue
+        if not title or not pub_type or not year:
+            rows.append(_row_err(row_num, "Обязательные поля: Название, Тип, Год"))
+            continue
+        if pub_type not in PUBLICATION_TYPES:
+            rows.append(_row_err(row_num, f"Тип '{pub_type}' должен быть: scopus, wos, local"))
+            continue
+        time_id  = _get_or_create_time(year, semester, db)
+        quartile = str(raw.get("Квартиль", "") or "").strip() or None
+        rows.append(_row_ok({"teacher_id": teacher_id, "time_id": time_id,
+                              "title": title, "type": pub_type, "quartile": quartile}, row_num))
+    valid    = sum(1 for r in rows if r.status == "ok")
+    warnings = sum(1 for r in rows if r.status == "warning")
+    errors   = sum(1 for r in rows if r.status == "error")
+    return SheetPreview(sheet="Публикации", total=len(rows),
+                        valid=valid, warnings=warnings, errors=errors, rows=rows)
+
+
+def _parse_teacher_patents(df: pd.DataFrame, teacher_id: int, db: Session) -> SheetPreview:
+    rows: list[ImportRow] = []
+    for i, raw in df.iterrows():
+        row_num = int(i) + 2
+        title   = str(raw.get("Название", "")).strip()
+        number  = str(raw.get("Номер",    "") or "").strip()
+        try:
+            year     = int(raw.get("Год",     0) or 0)
+            semester = int(raw.get("Семестр", 1) or 1)
+        except (ValueError, TypeError):
+            rows.append(_row_err(row_num, "Год должен быть числом"))
+            continue
+        if not title or not year:
+            rows.append(_row_err(row_num, "Обязательные поля: Название, Год"))
+            continue
+        time_id = _get_or_create_time(year, semester, db)
+        rows.append(_row_ok({"teacher_id": teacher_id, "time_id": time_id,
+                              "title": title, "registration_number": number or None}, row_num))
+    valid    = sum(1 for r in rows if r.status == "ok")
+    warnings = sum(1 for r in rows if r.status == "warning")
+    errors   = sum(1 for r in rows if r.status == "error")
+    return SheetPreview(sheet="Патенты", total=len(rows),
+                        valid=valid, warnings=warnings, errors=errors, rows=rows)
+
+
+def _parse_teacher_achievements(df: pd.DataFrame, teacher_id: int, db: Session) -> SheetPreview:
+    rows: list[ImportRow] = []
+    for i, raw in df.iterrows():
+        row_num = int(i) + 2
+        title   = str(raw.get("Название", "")).strip()
+        level   = str(raw.get("Уровень",  "")).strip().lower()
+        try:
+            year     = int(raw.get("Год",     0) or 0)
+            semester = int(raw.get("Семестр", 1) or 1)
+        except (ValueError, TypeError):
+            rows.append(_row_err(row_num, "Год должен быть числом"))
+            continue
+        if not title or not level or not year:
+            rows.append(_row_err(row_num, "Обязательные поля: Название, Уровень, Год"))
+            continue
+        if level not in ACHIEVEMENT_LEVELS:
+            rows.append(_row_err(row_num, f"Уровень '{level}' должен быть: international, national, local"))
+            continue
+        time_id = _get_or_create_time(year, semester, db)
+        rows.append(_row_ok({"teacher_id": teacher_id, "time_id": time_id,
+                              "title": title, "level": level}, row_num))
+    valid    = sum(1 for r in rows if r.status == "ok")
+    warnings = sum(1 for r in rows if r.status == "warning")
+    errors   = sum(1 for r in rows if r.status == "error")
+    return SheetPreview(sheet="Достижения", total=len(rows),
+                        valid=valid, warnings=warnings, errors=errors, rows=rows)
+
+
+def _parse_teacher_projects(df: pd.DataFrame, teacher_id: int, db: Session) -> SheetPreview:
+    rows: list[ImportRow] = []
+    for i, raw in df.iterrows():
+        row_num   = int(i) + 2
+        title     = str(raw.get("Название",                "")).strip()
+        source    = str(raw.get("Источник финансирования", "")).strip()
+        start_str = str(raw.get("Дата начала", "") or "").strip()
+        try:
+            budget_raw = str(raw.get("Бюджет", "") or "").strip()
+            budget = Decimal(budget_raw) if budget_raw else None
+        except InvalidOperation:
+            rows.append(_row_err(row_num, "Бюджет должен быть числом"))
+            continue
+        try:
+            year     = int(raw.get("Год",     0) or 0)
+            semester = int(raw.get("Семестр", 1) or 1)
+        except (ValueError, TypeError):
+            year, semester = 0, 1
+        if not title or not source:
+            rows.append(_row_err(row_num, "Обязательные поля: Название, Источник финансирования"))
+            continue
+        start_date = _parse_date(start_str)
+        if not year and start_date:
+            year = start_date.year
+        if not year:
+            rows.append(_row_err(row_num, "Укажите Год или корректную Дату начала"))
+            continue
+        time_id  = _get_or_create_time(year, semester, db)
+        end_date = _parse_date(str(raw.get("Дата конца", "") or "").strip())
+        rows.append(_row_ok({
+            "teacher_id": teacher_id, "time_id": time_id,
+            "title": title, "funding_source": source,
+            "budget":     str(budget)     if budget     is not None else None,
+            "start_date": str(start_date) if start_date else None,
+            "end_date":   str(end_date)   if end_date   else None,
+        }, row_num))
+    valid    = sum(1 for r in rows if r.status == "ok")
+    warnings = sum(1 for r in rows if r.status == "warning")
+    errors   = sum(1 for r in rows if r.status == "error")
+    return SheetPreview(sheet="Проекты", total=len(rows),
+                        valid=valid, warnings=warnings, errors=errors, rows=rows)
+
+
+TEACHER_PARSERS: dict = {
+    "teaching_load": _parse_teacher_teaching_load,
+    "publications":  _parse_teacher_publications,
+    "patents":       _parse_teacher_patents,
+    "achievements":  _parse_teacher_achievements,
+    "projects":      _parse_teacher_projects,
+}
+
+
+def parse_excel_teacher(file_bytes: bytes, sheet_type: str, teacher_id: int, db: Session) -> SheetPreview:
+    if sheet_type not in TEACHER_PARSERS:
+        raise ValueError(f"Unknown sheet_type: {sheet_type}")
+    xls = pd.ExcelFile(BytesIO(file_bytes), engine="openpyxl")
+    df  = xls.parse(xls.sheet_names[0], dtype=str).fillna("")
+    return TEACHER_PARSERS[sheet_type](df, teacher_id, db)
+
+
+def commit_import_teacher(sheet: SheetPreview, sheet_type: str, db: Session) -> tuple[int, int, list[str]]:
+    imported = 0
+    skipped  = 0
+    details: list[str] = []
+    for row in sheet.rows:
+        if row.status == "error":
+            skipped += 1
+            continue
+        try:
+            _write_row(sheet_type, row.data, db)
+            imported += 1
+        except Exception as e:
+            skipped += 1
+            details.append(f"Строка {row.row}: {e}")
+    db.commit()
+    return imported, skipped, details
