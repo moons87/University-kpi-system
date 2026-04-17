@@ -15,6 +15,7 @@ import KPIPage            from './pages/KPIPage';
 import ReportsPage        from './pages/ReportsPage';
 import SettingsPage       from './pages/SettingsPage';
 import StudentsPage       from './pages/StudentsPage';
+import ImportPage         from './pages/ImportPage';
 
 const GOLD   = '#b07d2a';
 const BORDER = '#e2e8f2';
@@ -254,6 +255,7 @@ export default function App() {
           <Route path="/kpi"              element={<AppLayout><KPIPage /></AppLayout>} />
           <Route path="/reports"          element={<AppLayout><ReportsPage /></AppLayout>} />
           <Route path="/settings"         element={<AppLayout><SettingsPage /></AppLayout>} />
+          <Route path="/import"           element={<AppLayout><ImportPage /></AppLayout>} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
