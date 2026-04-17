@@ -72,7 +72,8 @@ CREATE TABLE subjects (
 CREATE TABLE groups (
     id              SERIAL PRIMARY KEY,
     name            VARCHAR(100) NOT NULL,
-    education_level VARCHAR(50)  -- bachelor, master, phd
+    education_level VARCHAR(50),  -- bachelor, master, phd
+    advisor_id      INT REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE teaching_load (
