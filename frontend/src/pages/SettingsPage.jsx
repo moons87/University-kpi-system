@@ -142,7 +142,9 @@ export default function SettingsPage() {
   };
 
   const handleSaveAdvisor = (groupId, advisorId) => {
-    updateGroup(groupId, { advisor_id: advisorId || null })
+    setGroupError('');
+    const normalized = advisorId !== null && advisorId !== '' ? advisorId : null;
+    updateGroup(groupId, { advisor_id: normalized })
       .then((updated) => {
         setGroups((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
         setEditingGroup(null);
@@ -282,6 +284,7 @@ export default function SettingsPage() {
               return (
                 <ListItem
                   key={g.id}
+                  alignItems="flex-start"
                   secondaryAction={
                     !isEditing && (
                       <IconButton edge="end" size="small"
@@ -291,38 +294,40 @@ export default function SettingsPage() {
                     )
                   }
                 >
-                  <ListItemText
-                    primary={g.name}
-                    secondary={
-                      <>
-                        {g.education_level && `${g.education_level} · `}
-                        {`ID: ${g.id} · Advisor: `}
-                        <strong>{advisor ? advisor.email : '—'}</strong>
-                      </>
-                    }
-                  />
-                  {isEditing && (
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 2 }}>
-                      <FormControl size="small" sx={{ minWidth: 180 }}>
-                        <InputLabel>Advisor</InputLabel>
-                        <Select
-                          label="Advisor"
-                          value={editingGroup.advisor_id ?? ''}
-                          onChange={(e) => setEditingGroup((prev) => ({ ...prev, advisor_id: e.target.value }))}
-                        >
-                          <MenuItem value=""><em>Not assigned</em></MenuItem>
-                          {advisors.map((a) => (
-                            <MenuItem key={a.id} value={a.id}>{a.email}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      <Button size="small" variant="contained"
-                        onClick={() => handleSaveAdvisor(g.id, editingGroup.advisor_id)}>
-                        Save
-                      </Button>
-                      <Button size="small" onClick={() => setEditingGroup(null)}>Cancel</Button>
-                    </Stack>
-                  )}
+                  <Box sx={{ flex: 1 }}>
+                    <ListItemText
+                      primary={g.name}
+                      secondary={
+                        <>
+                          {g.education_level && `${g.education_level} · `}
+                          {`ID: ${g.id} · Advisor: `}
+                          <strong>{advisor ? advisor.email : '—'}</strong>
+                        </>
+                      }
+                    />
+                    {isEditing && (
+                      <Stack direction="row" spacing={1} alignItems="center" mt={1} flexWrap="wrap">
+                        <FormControl size="small" sx={{ minWidth: 180 }}>
+                          <InputLabel>Advisor</InputLabel>
+                          <Select
+                            label="Advisor"
+                            value={editingGroup.advisor_id ?? ''}
+                            onChange={(e) => setEditingGroup((prev) => ({ ...prev, advisor_id: e.target.value }))}
+                          >
+                            <MenuItem value=""><em>Not assigned</em></MenuItem>
+                            {advisors.map((a) => (
+                              <MenuItem key={a.id} value={a.id}>{a.email}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        <Button size="small" variant="contained"
+                          onClick={() => handleSaveAdvisor(g.id, editingGroup.advisor_id)}>
+                          Save
+                        </Button>
+                        <Button size="small" onClick={() => setEditingGroup(null)}>Cancel</Button>
+                      </Stack>
+                    )}
+                  </Box>
                 </ListItem>
               );
             })}
