@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import {
   Box, Typography, Card, CardContent, TextField, Button,
   Grid, Alert, Tabs, Tab, List, ListItem, ListItemText, Stack,
+  Select, MenuItem, FormControl, InputLabel, IconButton,
 } from '@mui/material';
-import { getSettings, updateSettings }   from '../api/settings';
-import { getSubjects, createSubject }    from '../api/subjects';
-import { getGroups,   createGroup }      from '../api/groups';
-import { getTimeDim,  createTimeDim }    from '../api/timeDim';
+import EditIcon from '@mui/icons-material/Edit';
+import { getSettings, updateSettings }                        from '../api/settings';
+import { getSubjects, createSubject }                         from '../api/subjects';
+import { getGroups, createGroup, updateGroup, getAdvisors }   from '../api/groups';
+import { getTimeDim, createTimeDim }                          from '../api/timeDim';
 import useAuthStore from '../store/authStore';
 
 /** Detects what the current academic semester should be */
@@ -45,8 +47,10 @@ export default function SettingsPage() {
 
   // ── Groups ──
   const [groups,     setGroups]     = useState([]);
-  const [newGroup,   setNewGroup]   = useState({ name: '', education_level: '' });
+  const [newGroup,   setNewGroup]   = useState({ name: '', education_level: '', advisor_id: null });
   const [groupError, setGroupError] = useState('');
+  const [advisors,      setAdvisors]      = useState([]);
+  const [editingGroup,  setEditingGroup]  = useState(null); // { id, advisor_id }
 
   // ── Periods ──
   const [periods,      setPeriods]      = useState([]);
@@ -74,6 +78,7 @@ export default function SettingsPage() {
     }
 
     getGroups().then(setGroups).catch(console.error);
+    getAdvisors().then(setAdvisors).catch(console.error);
   }, [user, isAdmin, isAdvisor]);
 
   if (!isAdmin && !isAdvisor) {
@@ -127,12 +132,22 @@ export default function SettingsPage() {
     createGroup({
       name: newGroup.name.trim(),
       education_level: newGroup.education_level.trim() || null,
+      advisor_id: newGroup.advisor_id || null,
     })
       .then((created) => {
         setGroups((prev) => [...prev, created]);
-        setNewGroup({ name: '', education_level: '' });
+        setNewGroup({ name: '', education_level: '', advisor_id: null });
       })
       .catch((err) => setGroupError(err.response?.data?.detail || 'Error creating group'));
+  };
+
+  const handleSaveAdvisor = (groupId, advisorId) => {
+    updateGroup(groupId, { advisor_id: advisorId || null })
+      .then((updated) => {
+        setGroups((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
+        setEditingGroup(null);
+      })
+      .catch((err) => setGroupError(err.response?.data?.detail || 'Error saving advisor'));
   };
 
   return (
@@ -234,7 +249,7 @@ export default function SettingsPage() {
         <Box>
           <Typography variant="h6" mb={2}>Groups</Typography>
           {groupError && <Alert severity="error" sx={{ mb: 2 }}>{groupError}</Alert>}
-          <Stack direction="row" spacing={2} mb={3} alignItems="center">
+          <Stack direction="row" spacing={2} mb={3} alignItems="center" flexWrap="wrap">
             <TextField
               label="Group name" size="small" required
               value={newGroup.name}
@@ -244,19 +259,73 @@ export default function SettingsPage() {
               label="Education level (optional)" size="small"
               value={newGroup.education_level}
               onChange={(e) => setNewGroup({ ...newGroup, education_level: e.target.value })}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddGroup()}
             />
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Advisor (optional)</InputLabel>
+              <Select
+                label="Advisor (optional)"
+                value={newGroup.advisor_id ?? ''}
+                onChange={(e) => setNewGroup({ ...newGroup, advisor_id: e.target.value || null })}
+              >
+                <MenuItem value=""><em>Not assigned</em></MenuItem>
+                {advisors.map((a) => (
+                  <MenuItem key={a.id} value={a.id}>{a.email}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <Button variant="contained" onClick={handleAddGroup}>Add</Button>
           </Stack>
           <List dense>
-            {groups.map((g) => (
-              <ListItem key={g.id}>
-                <ListItemText
-                  primary={g.name}
-                  secondary={g.education_level ? `${g.education_level} · ID: ${g.id}` : `ID: ${g.id}`}
-                />
-              </ListItem>
-            ))}
+            {groups.map((g) => {
+              const advisor   = advisors.find((a) => a.id === g.advisor_id);
+              const isEditing = editingGroup?.id === g.id;
+              return (
+                <ListItem
+                  key={g.id}
+                  secondaryAction={
+                    !isEditing && (
+                      <IconButton edge="end" size="small"
+                        onClick={() => setEditingGroup({ id: g.id, advisor_id: g.advisor_id ?? '' })}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    )
+                  }
+                >
+                  <ListItemText
+                    primary={g.name}
+                    secondary={
+                      <>
+                        {g.education_level && `${g.education_level} · `}
+                        {`ID: ${g.id} · Advisor: `}
+                        <strong>{advisor ? advisor.email : '—'}</strong>
+                      </>
+                    }
+                  />
+                  {isEditing && (
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 2 }}>
+                      <FormControl size="small" sx={{ minWidth: 180 }}>
+                        <InputLabel>Advisor</InputLabel>
+                        <Select
+                          label="Advisor"
+                          value={editingGroup.advisor_id ?? ''}
+                          onChange={(e) => setEditingGroup((prev) => ({ ...prev, advisor_id: e.target.value }))}
+                        >
+                          <MenuItem value=""><em>Not assigned</em></MenuItem>
+                          {advisors.map((a) => (
+                            <MenuItem key={a.id} value={a.id}>{a.email}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <Button size="small" variant="contained"
+                        onClick={() => handleSaveAdvisor(g.id, editingGroup.advisor_id)}>
+                        Save
+                      </Button>
+                      <Button size="small" onClick={() => setEditingGroup(null)}>Cancel</Button>
+                    </Stack>
+                  )}
+                </ListItem>
+              );
+            })}
           </List>
         </Box>
       )}
