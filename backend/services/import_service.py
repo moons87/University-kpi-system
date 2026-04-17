@@ -1,4 +1,5 @@
 from io import BytesIO
+import datetime
 from datetime import date as date_type
 from decimal import Decimal, InvalidOperation
 from typing import Any
@@ -309,7 +310,6 @@ def _parse_date(value: str) -> date_type | None:
         return None
     for fmt in ("%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y"):
         try:
-            import datetime
             return datetime.datetime.strptime(value, fmt).date()
         except ValueError:
             continue
@@ -458,7 +458,6 @@ def _write_row(sheet_type: str | None, data: dict, db: Session) -> None:
             level=data["level"],
         ))
     elif sheet_type == "projects":
-        import datetime
         start = datetime.date.fromisoformat(data["start_date"]) if data.get("start_date") else None
         end = datetime.date.fromisoformat(data["end_date"]) if data.get("end_date") else None
         db.add(Project(
