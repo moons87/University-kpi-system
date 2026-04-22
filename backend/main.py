@@ -5,7 +5,7 @@ from routers import (
     auth, positions, degrees, departments, time_dim,
     teachers, subjects, groups,
     teaching_load, publications, patents, achievements, projects,
-    kpi, kpi_settings, students, import_data,
+    kpi, kpi_settings, students, import_data, etl,
 )
 
 from database import engine, Base
@@ -39,6 +39,7 @@ app.include_router(kpi.router)
 app.include_router(kpi_settings.router)
 app.include_router(students.router)
 app.include_router(import_data.router)
+app.include_router(etl.router)
 
 
 @app.get("/health")
