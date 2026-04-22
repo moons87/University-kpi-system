@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS etl_runs (
     id            SERIAL PRIMARY KEY,
     year          INT         NOT NULL,
-    semester      INT         NOT NULL,
+    semester      INT         NOT NULL CHECK (semester IN (1, 2)),
     trigger       VARCHAR(20) NOT NULL CHECK (trigger IN ('cli', 'api', 'scheduler')),
     started_at    TIMESTAMP   NOT NULL DEFAULT NOW(),
     finished_at   TIMESTAMP,
