@@ -1,5 +1,8 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from scheduler import create_scheduler
 
 from routers import (
     auth, positions, degrees, departments, time_dim,
@@ -12,7 +15,18 @@ from database import engine, Base
 import models
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="University Analytics API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler = create_scheduler()
+    scheduler.start()
+    print("[scheduler] APScheduler started — nightly ETL at 02:00")
+    yield
+    scheduler.shutdown(wait=False)
+    print("[scheduler] APScheduler stopped")
+
+
+app = FastAPI(title="University Analytics API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
