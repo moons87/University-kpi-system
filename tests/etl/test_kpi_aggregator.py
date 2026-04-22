@@ -48,10 +48,12 @@ def test_maps_scores_and_period(kpi_df, details_df):
 
 def test_maps_raw_metrics(kpi_df, details_df):
     row = _transform_teacher_kpi(kpi_df, details_df, 2024, 1).iloc[0]
+    assert row["teacher_id"] == 1
     assert row["hours_total"] == 240.0
     assert row["scopus_wos_count"] == 3
     assert row["local_pub_count"] == 5
     assert row["patent_count"] == 2
+    assert row["project_budget"] == 4_000_000.0
     assert row["ach_intl"] == 1
     assert row["ach_natl"] == 2
     assert row["ach_local"] == 0

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pandas as pd
 from sqlalchemy import text
@@ -37,7 +37,7 @@ def _transform_teacher_kpi(
             else pd.Series(0, index=merged.index)
         )
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     return pd.DataFrame({
         "teacher_id":        merged["teacher_id"].astype(int),
         "teacher_name":      merged["teacher_name"],
