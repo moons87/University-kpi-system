@@ -5,8 +5,13 @@ import os
 import sys
 from datetime import datetime
 
-# Allow importing backend/services without installing the backend as a package
-_BACKEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backend")
+# When run as a script (python etl/pipeline.py), Python adds etl/ to sys.path
+# instead of the repo root. Add repo root explicitly so `etl.*` imports work.
+_REPO_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
+_BACKEND_DIR = os.path.join(_REPO_ROOT, "backend")
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
 
