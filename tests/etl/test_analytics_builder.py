@@ -104,3 +104,14 @@ def test_trends_new_teacher_no_prev():
     result = _transform_trends(curr, prev, 2024, 1)
     bob = result[result["teacher_id"] == 2].iloc[0]
     assert pd.isna(bob["prev_score"])
+    assert pd.isna(bob["delta"])
+
+
+def test_dept_summary_empty_returns_empty():
+    result = _transform_dept_summary(pd.DataFrame(), 2024, 1)
+    assert result.empty
+
+
+def test_rankings_empty_returns_empty():
+    result = _transform_rankings(pd.DataFrame(), 2024, 1)
+    assert result.empty

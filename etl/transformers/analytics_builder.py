@@ -28,7 +28,9 @@ def _transform_dept_summary(df: pd.DataFrame, year: int, semester: int) -> pd.Da
         avg_achievement =("achievement_score", "mean"),
     ).reset_index()
 
-    r = lambda v: round(float(v), 2)
+    def _r(v):
+        return round(float(v), 2)
+
     now = datetime.now(timezone.utc)
     records = [
         {
@@ -37,13 +39,13 @@ def _transform_dept_summary(df: pd.DataFrame, year: int, semester: int) -> pd.Da
             "year":            year,
             "semester":        semester,
             "teacher_count":   int(row["teacher_count"]),
-            "avg_total_score": r(row["avg_total_score"]),
-            "max_total_score": r(row["max_total_score"]),
-            "min_total_score": r(row["min_total_score"]),
-            "avg_teaching":    r(row["avg_teaching"]),
-            "avg_research":    r(row["avg_research"]),
-            "avg_project":     r(row["avg_project"]),
-            "avg_achievement": r(row["avg_achievement"]),
+            "avg_total_score": _r(row["avg_total_score"]),
+            "max_total_score": _r(row["max_total_score"]),
+            "min_total_score": _r(row["min_total_score"]),
+            "avg_teaching":    _r(row["avg_teaching"]),
+            "avg_research":    _r(row["avg_research"]),
+            "avg_project":     _r(row["avg_project"]),
+            "avg_achievement": _r(row["avg_achievement"]),
             "updated_at":      now,
         }
         for _, row in grouped.iterrows()
