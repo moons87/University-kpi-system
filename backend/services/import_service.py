@@ -28,7 +28,21 @@ SHEET_ALIASES = {
     "achievements": "achievements",
 }
 
-PUBLICATION_TYPES = {"scopus", "wos", "local"}
+# Maps lowercase input → canonical DB value (matches kpi_engine type strings)
+PUBLICATION_TYPE_MAP = {
+    "scopus":                      "Scopus",
+    "wos":                         "WoS",
+    "вестник":                     "Вестник",
+    "конференция":                 "Конференция",
+    "local":                       "Вестник",
+    "кокснво":                     "КОКСНВО",
+    "международная конференция":   "Международная конференция",
+    "монография":                  "Монография",
+    "учебное пособие":             "Учебное пособие",
+    "зарубежные журналы":          "Зарубежные журналы",
+}
+_PUB_TYPE_HINT = "scopus, wos, вестник, конференция, кокснво, международная конференция, монография, учебное пособие, зарубежные журналы"
+
 ACHIEVEMENT_LEVELS = {"international", "national", "local"}
 
 
@@ -202,20 +216,28 @@ def _parse_publications(df: pd.DataFrame, db: Session) -> SheetPreview:
         if name.lower() not in teacher_map:
             rows.append(_row_err(row_num, f"ФИО '{name}' не найден в БД"))
             continue
-        if pub_type not in PUBLICATION_TYPES:
-            rows.append(_row_err(row_num, f"Тип '{pub_type}' должен быть: scopus, wos, local"))
+        canonical_type = PUBLICATION_TYPE_MAP.get(pub_type)
+        if not canonical_type:
+            rows.append(_row_err(row_num, f"Тип '{pub_type}' должен быть: {_PUB_TYPE_HINT}"))
             continue
 
         time_id = _get_or_create_time(year, semester, db)
         quartile = str(raw.get("Квартиль", "") or "").strip() or None
+        teacher_id = teacher_map[name.lower()]
         data: dict[str, Any] = {
-            "teacher_id": teacher_map[name.lower()],
+            "teacher_id": teacher_id,
             "time_id": time_id,
             "title": title,
-            "type": pub_type,
+            "type": canonical_type,
             "quartile": quartile,
         }
-        rows.append(_row_ok(data, row_num))
+        already = db.query(Publication).filter_by(
+            teacher_id=teacher_id, time_id=time_id, title=title,
+        ).first()
+        if already:
+            rows.append(_row_warn(data, row_num, "Жарияланым бұрыннан бар, өткізілді"))
+        else:
+            rows.append(_row_ok(data, row_num))
 
     valid = sum(1 for r in rows if r.status == "ok")
     warnings = sum(1 for r in rows if r.status == "warning")
@@ -248,13 +270,18 @@ def _parse_patents(df: pd.DataFrame, db: Session) -> SheetPreview:
             continue
 
         time_id = _get_or_create_time(year, semester, db)
+        teacher_id = teacher_map[name.lower()]
         data: dict[str, Any] = {
-            "teacher_id": teacher_map[name.lower()],
+            "teacher_id": teacher_id,
             "time_id": time_id,
             "title": title,
             "registration_number": number or None,
         }
-        rows.append(_row_ok(data, row_num))
+        already = db.query(Patent).filter_by(teacher_id=teacher_id, time_id=time_id, title=title).first()
+        if already:
+            rows.append(_row_warn(data, row_num, "Патент бұрыннан бар, өткізілді"))
+        else:
+            rows.append(_row_ok(data, row_num))
 
     valid = sum(1 for r in rows if r.status == "ok")
     warnings = sum(1 for r in rows if r.status == "warning")
@@ -290,13 +317,18 @@ def _parse_achievements(df: pd.DataFrame, db: Session) -> SheetPreview:
             continue
 
         time_id = _get_or_create_time(year, semester, db)
+        teacher_id = teacher_map[name.lower()]
         data: dict[str, Any] = {
-            "teacher_id": teacher_map[name.lower()],
+            "teacher_id": teacher_id,
             "time_id": time_id,
             "title": title,
             "level": level,
         }
-        rows.append(_row_ok(data, row_num))
+        already = db.query(Achievement).filter_by(teacher_id=teacher_id, time_id=time_id, title=title).first()
+        if already:
+            rows.append(_row_warn(data, row_num, "Жетістік бұрыннан бар, өткізілді"))
+        else:
+            rows.append(_row_ok(data, row_num))
 
     valid = sum(1 for r in rows if r.status == "ok")
     warnings = sum(1 for r in rows if r.status == "warning")
@@ -355,9 +387,10 @@ def _parse_projects(df: pd.DataFrame, db: Session) -> SheetPreview:
             continue
 
         time_id = _get_or_create_time(year, semester, db)
+        teacher_id = teacher_map[name.lower()]
         end_date = _parse_date(str(raw.get("Дата конца", "") or "").strip())
         data: dict[str, Any] = {
-            "teacher_id": teacher_map[name.lower()],
+            "teacher_id": teacher_id,
             "time_id": time_id,
             "title": title,
             "funding_source": source,
@@ -365,7 +398,11 @@ def _parse_projects(df: pd.DataFrame, db: Session) -> SheetPreview:
             "start_date": str(start_date) if start_date else None,
             "end_date": str(end_date) if end_date else None,
         }
-        rows.append(_row_ok(data, row_num))
+        already = db.query(Project).filter_by(teacher_id=teacher_id, time_id=time_id, title=title).first()
+        if already:
+            rows.append(_row_warn(data, row_num, "Жоба бұрыннан бар, өткізілді"))
+        else:
+            rows.append(_row_ok(data, row_num))
 
     valid = sum(1 for r in rows if r.status == "ok")
     warnings = sum(1 for r in rows if r.status == "warning")
@@ -428,35 +465,60 @@ def _write_row(sheet_type: str | None, data: dict, db: Session) -> None:
                 department_id=data.get("department_id"),
             ))
     elif sheet_type == "teaching_load":
-        db.add(TeachingLoad(
+        exists = db.query(TeachingLoad).filter_by(
             teacher_id=data["teacher_id"],
             subject_id=data["subject_id"],
             group_id=data["group_id"],
             time_id=data["time_id"],
-            hours=data["hours"],
-        ))
+        ).first()
+        if not exists:
+            db.add(TeachingLoad(
+                teacher_id=data["teacher_id"],
+                subject_id=data["subject_id"],
+                group_id=data["group_id"],
+                time_id=data["time_id"],
+                hours=data["hours"],
+            ))
     elif sheet_type == "publications":
-        db.add(Publication(
+        exists = db.query(Publication).filter_by(
             teacher_id=data["teacher_id"],
             time_id=data["time_id"],
             title=data["title"],
-            type=data["type"],
-            quartile=data.get("quartile"),
-        ))
+        ).first()
+        if not exists:
+            db.add(Publication(
+                teacher_id=data["teacher_id"],
+                time_id=data["time_id"],
+                title=data["title"],
+                type=data["type"],
+                quartile=data.get("quartile"),
+            ))
     elif sheet_type == "patents":
-        db.add(Patent(
+        exists = db.query(Patent).filter_by(
             teacher_id=data["teacher_id"],
             time_id=data["time_id"],
             title=data["title"],
-            registration_number=data.get("registration_number"),
-        ))
+        ).first()
+        if not exists:
+            db.add(Patent(
+                teacher_id=data["teacher_id"],
+                time_id=data["time_id"],
+                title=data["title"],
+                registration_number=data.get("registration_number"),
+            ))
     elif sheet_type == "achievements":
-        db.add(Achievement(
+        exists = db.query(Achievement).filter_by(
             teacher_id=data["teacher_id"],
             time_id=data["time_id"],
             title=data["title"],
-            level=data["level"],
-        ))
+        ).first()
+        if not exists:
+            db.add(Achievement(
+                teacher_id=data["teacher_id"],
+                time_id=data["time_id"],
+                title=data["title"],
+                level=data["level"],
+            ))
     elif sheet_type == "projects":
         start = datetime.date.fromisoformat(data["start_date"]) if data.get("start_date") else None
         end = datetime.date.fromisoformat(data["end_date"]) if data.get("end_date") else None
@@ -516,13 +578,21 @@ def _parse_teacher_publications(df: pd.DataFrame, teacher_id: int, db: Session) 
         if not title or not pub_type or not year:
             rows.append(_row_err(row_num, "Обязательные поля: Название, Тип, Год"))
             continue
-        if pub_type not in PUBLICATION_TYPES:
-            rows.append(_row_err(row_num, f"Тип '{pub_type}' должен быть: scopus, wos, local"))
+        canonical_type = PUBLICATION_TYPE_MAP.get(pub_type)
+        if not canonical_type:
+            rows.append(_row_err(row_num, f"Тип '{pub_type}' должен быть: {_PUB_TYPE_HINT}"))
             continue
         time_id  = _get_or_create_time(year, semester, db)
         quartile = str(raw.get("Квартиль", "") or "").strip() or None
-        rows.append(_row_ok({"teacher_id": teacher_id, "time_id": time_id,
-                              "title": title, "type": pub_type, "quartile": quartile}, row_num))
+        data = {"teacher_id": teacher_id, "time_id": time_id,
+                "title": title, "type": canonical_type, "quartile": quartile}
+        already = db.query(Publication).filter_by(
+            teacher_id=teacher_id, time_id=time_id, title=title,
+        ).first()
+        if already:
+            rows.append(_row_warn(data, row_num, "Жарияланым бұрыннан бар, өткізілді"))
+        else:
+            rows.append(_row_ok(data, row_num))
     valid    = sum(1 for r in rows if r.status == "ok")
     warnings = sum(1 for r in rows if r.status == "warning")
     errors   = sum(1 for r in rows if r.status == "error")
@@ -546,8 +616,13 @@ def _parse_teacher_patents(df: pd.DataFrame, teacher_id: int, db: Session) -> Sh
             rows.append(_row_err(row_num, "Обязательные поля: Название, Год"))
             continue
         time_id = _get_or_create_time(year, semester, db)
-        rows.append(_row_ok({"teacher_id": teacher_id, "time_id": time_id,
-                              "title": title, "registration_number": number or None}, row_num))
+        data = {"teacher_id": teacher_id, "time_id": time_id,
+                "title": title, "registration_number": number or None}
+        already = db.query(Patent).filter_by(teacher_id=teacher_id, time_id=time_id, title=title).first()
+        if already:
+            rows.append(_row_warn(data, row_num, "Патент бұрыннан бар, өткізілді"))
+        else:
+            rows.append(_row_ok(data, row_num))
     valid    = sum(1 for r in rows if r.status == "ok")
     warnings = sum(1 for r in rows if r.status == "warning")
     errors   = sum(1 for r in rows if r.status == "error")
@@ -574,8 +649,13 @@ def _parse_teacher_achievements(df: pd.DataFrame, teacher_id: int, db: Session) 
             rows.append(_row_err(row_num, f"Уровень '{level}' должен быть: international, national, local"))
             continue
         time_id = _get_or_create_time(year, semester, db)
-        rows.append(_row_ok({"teacher_id": teacher_id, "time_id": time_id,
-                              "title": title, "level": level}, row_num))
+        data = {"teacher_id": teacher_id, "time_id": time_id,
+                "title": title, "level": level}
+        already = db.query(Achievement).filter_by(teacher_id=teacher_id, time_id=time_id, title=title).first()
+        if already:
+            rows.append(_row_warn(data, row_num, "Жетістік бұрыннан бар, өткізілді"))
+        else:
+            rows.append(_row_ok(data, row_num))
     valid    = sum(1 for r in rows if r.status == "ok")
     warnings = sum(1 for r in rows if r.status == "warning")
     errors   = sum(1 for r in rows if r.status == "error")
@@ -612,13 +692,18 @@ def _parse_teacher_projects(df: pd.DataFrame, teacher_id: int, db: Session) -> S
             continue
         time_id  = _get_or_create_time(year, semester, db)
         end_date = _parse_date(str(raw.get("Дата конца", "") or "").strip())
-        rows.append(_row_ok({
+        data = {
             "teacher_id": teacher_id, "time_id": time_id,
             "title": title, "funding_source": source,
             "budget":     str(budget)     if budget     is not None else None,
             "start_date": str(start_date) if start_date else None,
             "end_date":   str(end_date)   if end_date   else None,
-        }, row_num))
+        }
+        already = db.query(Project).filter_by(teacher_id=teacher_id, time_id=time_id, title=title).first()
+        if already:
+            rows.append(_row_warn(data, row_num, "Жоба бұрыннан бар, өткізілді"))
+        else:
+            rows.append(_row_ok(data, row_num))
     valid    = sum(1 for r in rows if r.status == "ok")
     warnings = sum(1 for r in rows if r.status == "warning")
     errors   = sum(1 for r in rows if r.status == "error")

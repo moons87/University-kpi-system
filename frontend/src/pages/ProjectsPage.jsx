@@ -28,10 +28,10 @@ export default function ProjectsPage() {
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5">Projects</Typography>
+        <Typography variant="h5">Жобалар</Typography>
         <Stack direction="row" spacing={2} alignItems="center">
           {user?.role === 'teacher' && (
-            <Button variant="contained" onClick={() => setOpenForm(true)}>Add New</Button>
+            <Button variant="contained" onClick={() => setOpenForm(true)}>Жаңа жазба</Button>
           )}
           <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setOpenImport(true)}>
             Импорт
@@ -42,12 +42,12 @@ export default function ProjectsPage() {
       <DataGrid
         rows={rows}
         columns={[
-          { field: 'teacher_id',     headerName: 'Teacher',        width: 100 },
-          { field: 'title',          headerName: 'Title',          flex: 2 },
-          { field: 'funding_source', headerName: 'Funding Source', flex: 1 },
-          { field: 'budget',         headerName: 'Budget',         width: 130 },
-          { field: 'start_date',     headerName: 'Start',          width: 110 },
-          { field: 'end_date',       headerName: 'End',            width: 110 },
+          { field: 'teacher_id',     headerName: 'Оқытушы',         width: 100 },
+          { field: 'title',          headerName: 'Атауы',           flex: 2 },
+          { field: 'funding_source', headerName: 'Қаржыландыру',   flex: 1 },
+          { field: 'budget',         headerName: 'Бюджет',          width: 130 },
+          { field: 'start_date',     headerName: 'Басталуы',        width: 110 },
+          { field: 'end_date',       headerName: 'Аяқталуы',        width: 110 },
         ]}
         loading={loading}
         autoHeight
@@ -60,7 +60,7 @@ export default function ProjectsPage() {
         onClose={() => setOpenImport(false)}
         onSuccess={loadData}
         sheetType="projects"
-        title="Импорт проектов"
+        title="Жобаларды импорттау"
       />
     </Box>
   );

@@ -1,22 +1,21 @@
 import axios from 'axios';
 
+// In production set REACT_APP_API_URL=https://your-api-domain.com
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 const client = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: API_URL,
+  withCredentials: true,   // Send httpOnly cookie with every request
 });
 
-client.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// No Authorization header — authentication is handled via httpOnly cookie.
+// The browser attaches the cookie automatically on every request to API_URL.
 
 client.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
+      // Session expired or cookie missing — redirect to login
       window.location.href = '/login';
     }
     return Promise.reject(error);

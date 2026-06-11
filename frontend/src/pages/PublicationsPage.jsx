@@ -28,10 +28,10 @@ export default function PublicationsPage() {
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5">Publications</Typography>
+        <Typography variant="h5">Жарияланымдар</Typography>
         <Stack direction="row" spacing={2} alignItems="center">
           {user?.role === 'teacher' && (
-            <Button variant="contained" onClick={() => setOpenForm(true)}>Add New</Button>
+            <Button variant="contained" onClick={() => setOpenForm(true)}>Жаңа жазба</Button>
           )}
           <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setOpenImport(true)}>
             Импорт
@@ -42,10 +42,10 @@ export default function PublicationsPage() {
       <DataGrid
         rows={rows}
         columns={[
-          { field: 'teacher_id', headerName: 'Teacher',  width: 100 },
-          { field: 'title',      headerName: 'Title',    flex: 2 },
-          { field: 'type',       headerName: 'Type',     width: 100 },
-          { field: 'quartile',   headerName: 'Quartile', width: 100 },
+          { field: 'teacher_id', headerName: 'Оқытушы',    width: 100 },
+          { field: 'title',      headerName: 'Атауы',     flex: 2 },
+          { field: 'type',       headerName: 'Түрі',      width: 100 },
+          { field: 'quartile',   headerName: 'Квартиль',  width: 100 },
         ]}
         loading={loading}
         autoHeight
@@ -58,7 +58,7 @@ export default function PublicationsPage() {
         onClose={() => setOpenImport(false)}
         onSuccess={loadData}
         sheetType="publications"
-        title="Импорт публикаций"
+        title="Жарияланымдарды импорттау"
       />
     </Box>
   );

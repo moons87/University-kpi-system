@@ -12,6 +12,11 @@ from auth.jwt import get_current_user, require_advisor_or_admin
 router = APIRouter(prefix="/groups", tags=["groups"])
 
 
+@router.get("/advisors", response_model=List[UserOut])
+def list_advisors(db: Session = Depends(get_db), _=Depends(get_current_user)):
+    return db.query(User).filter(User.role == "advisor").all()
+
+
 @router.get("/", response_model=List[GroupOut])
 def list_groups(db: Session = Depends(get_db), _=Depends(get_current_user)):
     return db.query(Group).all()
@@ -40,16 +45,12 @@ def update_group(
     obj = db.query(Group).filter(Group.id == group_id).first()
     if not obj:
         raise HTTPException(status_code=404, detail="Group not found")
-    if body.advisor_id is not None:
-        advisor = db.query(User).filter(User.id == body.advisor_id, User.role == "advisor").first()
-        if not advisor:
-            raise HTTPException(status_code=400, detail="Пользователь не является эдвайзером")
-    obj.advisor_id = body.advisor_id
+    if "advisor_id" in body.model_fields_set:
+        if body.advisor_id is not None:
+            advisor = db.query(User).filter(User.id == body.advisor_id, User.role == "advisor").first()
+            if not advisor:
+                raise HTTPException(status_code=400, detail="User is not an advisor")
+        obj.advisor_id = body.advisor_id
     db.commit()
     db.refresh(obj)
     return obj
-
-
-@router.get("/advisors", response_model=List[UserOut])
-def list_advisors(db: Session = Depends(get_db), _=Depends(get_current_user)):
-    return db.query(User).filter(User.role == "advisor").all()

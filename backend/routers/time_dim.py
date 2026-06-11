@@ -5,7 +5,7 @@ from typing import List
 from database import get_db
 from models import TimeDim
 from schemas.time_dim import TimeDimCreate, TimeDimOut
-from auth.jwt import get_current_user
+from auth.jwt import get_current_user, require_admin
 
 router = APIRouter(prefix="/time-dim", tags=["time_dim"])
 
@@ -16,7 +16,7 @@ def list_time_dim(db: Session = Depends(get_db), _=Depends(get_current_user)):
 
 
 @router.post("/", response_model=TimeDimOut)
-def create_time_dim(body: TimeDimCreate, db: Session = Depends(get_db), _=Depends(get_current_user)):
+def create_time_dim(body: TimeDimCreate, db: Session = Depends(get_db), _=Depends(require_admin)):
     obj = TimeDim(**body.model_dump())
     db.add(obj)
     db.commit()

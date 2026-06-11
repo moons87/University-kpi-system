@@ -80,6 +80,10 @@ def create_teacher_account(
     current_user: User = Depends(get_current_user),
 ):
     """Admin-only: create a login account for an existing teacher."""
+    import secrets
+    import logging
+    _logger = logging.getLogger(__name__)
+
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admins can create accounts")
 
@@ -93,19 +97,25 @@ def create_teacher_account(
     if existing:
         raise HTTPException(status_code=409, detail="Account already exists for this teacher")
 
-    default_password = "changeme123"
+    # Generate a cryptographically secure temporary password
+    temp_password = secrets.token_urlsafe(12)
     new_user = User(
         email=teacher.email,
-        password_hash=pwd_context.hash(default_password),
+        password_hash=pwd_context.hash(temp_password),
         role="teacher",
         teacher_id=teacher_id,
     )
     db.add(new_user)
     db.commit()
 
+    # Log the temp password server-side only — never return it in the HTTP response
+    _logger.info(
+        "Account created for teacher_id=%d email=%s temp_password=%s — share via secure channel",
+        teacher_id, teacher.email, temp_password,
+    )
+
     return {
-        "status":   "created",
-        "email":    teacher.email,
-        "password": default_password,
-        "message":  "Account created. Tell the teacher to change the password.",
+        "status":  "created",
+        "email":   teacher.email,
+        "message": "Account created. Share the temporary password via a secure channel (server log).",
     }

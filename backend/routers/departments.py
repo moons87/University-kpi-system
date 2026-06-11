@@ -5,7 +5,7 @@ from typing import List
 from database import get_db
 from models import Department
 from schemas.department import DepartmentCreate, DepartmentOut
-from auth.jwt import get_current_user
+from auth.jwt import get_current_user, require_admin
 
 router = APIRouter(prefix="/departments", tags=["departments"])
 
@@ -16,7 +16,7 @@ def list_departments(db: Session = Depends(get_db), _=Depends(get_current_user))
 
 
 @router.post("/", response_model=DepartmentOut)
-def create_department(body: DepartmentCreate, db: Session = Depends(get_db), _=Depends(get_current_user)):
+def create_department(body: DepartmentCreate, db: Session = Depends(get_db), _=Depends(require_admin)):
     obj = Department(**body.model_dump())
     db.add(obj)
     db.commit()

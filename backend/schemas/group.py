@@ -15,6 +15,6 @@ class GroupUpdate(BaseModel):
 class GroupOut(BaseModel):
     id: int
     name: str
-    education_level: Optional[str]
-    advisor_id: Optional[int]
+    education_level: Optional[str] = None
+    advisor_id: Optional[int] = None
     model_config = {"from_attributes": True}

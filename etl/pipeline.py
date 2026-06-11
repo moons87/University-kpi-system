@@ -110,18 +110,23 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="University Analytics ETL")
     parser.add_argument("--year",     type=int, help="Academic year (default: auto-detect)")
     parser.add_argument("--semester", type=int, choices=[1, 2],
-                        help="Semester 1 or 2 (default: auto-detect)")
+                        help="Semester 1 or 2. Omit to run both semesters for the year.")
     args = parser.parse_args()
 
-    year, semester = args.year, args.semester
-    if not year or not semester:
-        year, semester = _current_period()
+    current_year, current_sem = _current_period()
+    year     = args.year     or current_year
+    semester = args.semester  # None = run both
 
-    print(f"[ETL] Running for {year} semester {semester}...")
-    try:
-        result = run_etl(year, semester, trigger="cli")
-        print(f"[ETL] Done: {result}")
-        sys.exit(0)
-    except Exception as e:
-        print(f"[ETL] Failed: {e}", file=sys.stderr)
-        sys.exit(1)
+    semesters = [semester] if semester else [1, 2]
+
+    failed = False
+    for sem in semesters:
+        print(f"[ETL] Running for {year} semester {sem}...")
+        try:
+            result = run_etl(year, sem, trigger="cli")
+            print(f"[ETL] Done: {result}")
+        except Exception as e:
+            print(f"[ETL] Failed for semester {sem}: {e}", file=sys.stderr)
+            failed = True
+
+    sys.exit(1 if failed else 0)

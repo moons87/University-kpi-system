@@ -28,10 +28,10 @@ export default function TeachingLoadPage() {
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5">Teaching Load</Typography>
+        <Typography variant="h5">Оқу жүктемесі</Typography>
         <Stack direction="row" spacing={2} alignItems="center">
           {user?.role === 'teacher' && (
-            <Button variant="contained" onClick={() => setOpenForm(true)}>Add New</Button>
+            <Button variant="contained" onClick={() => setOpenForm(true)}>Жаңа жазба</Button>
           )}
           <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setOpenImport(true)}>
             Импорт
@@ -42,11 +42,11 @@ export default function TeachingLoadPage() {
       <DataGrid
         rows={rows}
         columns={[
-          { field: 'teacher_id', headerName: 'Teacher ID', width: 110 },
-          { field: 'subject_id', headerName: 'Subject ID', width: 110 },
-          { field: 'group_id',   headerName: 'Group ID',   width: 100 },
-          { field: 'time_id',    headerName: 'Period ID',  width: 100 },
-          { field: 'hours',      headerName: 'Hours',      width: 90 },
+          { field: 'teacher_id', headerName: 'Оқытушы ID', width: 110 },
+          { field: 'subject_id', headerName: 'Пән ID',     width: 110 },
+          { field: 'group_id',   headerName: 'Топ ID',     width: 100 },
+          { field: 'time_id',    headerName: 'Кезең ID',   width: 100 },
+          { field: 'hours',      headerName: 'Сағат',      width: 90 },
         ]}
         loading={loading}
         autoHeight
@@ -59,7 +59,7 @@ export default function TeachingLoadPage() {
         onClose={() => setOpenImport(false)}
         onSuccess={loadData}
         sheetType="teaching_load"
-        title="Импорт нагрузки"
+        title="Жүктемені импорттау"
       />
     </Box>
   );

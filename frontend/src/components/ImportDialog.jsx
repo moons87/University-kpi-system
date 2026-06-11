@@ -37,7 +37,7 @@ export default function ImportDialog({ open, onClose, onSuccess, sheetType, titl
       setPreview(data.sheets?.[0] ?? null);
       setStep('preview');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Ошибка чтения файла');
+      setError(err.response?.data?.detail || 'Файлды оқуда қате');
       setFile(null);
     } finally {
       setLoading(false);
@@ -51,7 +51,7 @@ export default function ImportDialog({ open, onClose, onSuccess, sheetType, titl
       setResult(data); setStep('done');
       onSuccess?.();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Ошибка импорта');
+      setError(err.response?.data?.detail || 'Импорттауда қате');
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export default function ImportDialog({ open, onClose, onSuccess, sheetType, titl
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>{title ?? 'Импорт из Excel'}</DialogTitle>
+      <DialogTitle>{title ?? 'Excel-ден импорттау'}</DialogTitle>
       <DialogContent dividers>
         {loading && <LinearProgress sx={{ mb: 2 }} />}
         {error   && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
@@ -76,8 +76,8 @@ export default function ImportDialog({ open, onClose, onSuccess, sheetType, titl
             onClick={() => inputRef.current?.click()}
           >
             <UploadFileIcon sx={{ fontSize: 44, color: '#c8d0e0' }} />
-            <Typography sx={{ fontWeight: 600, color: '#1a2540' }}>Выберите .xlsx файл</Typography>
-            <Typography sx={{ fontSize: '0.78rem', color: '#94a3b8' }}>Нажмите для выбора</Typography>
+            <Typography sx={{ fontWeight: 600, color: '#1a2540' }}>.xlsx файлды таңдаңыз</Typography>
+            <Typography sx={{ fontSize: '0.78rem', color: '#94a3b8' }}>Таңдау үшін басыңыз</Typography>
             <input ref={inputRef} type="file" accept=".xlsx" hidden onChange={handleFileChange} />
           </Stack>
         )}
@@ -85,17 +85,17 @@ export default function ImportDialog({ open, onClose, onSuccess, sheetType, titl
         {step === 'preview' && sheet && (
           <Box>
             <Stack direction="row" spacing={1.5} mb={2} alignItems="center">
-              <Chip label={`Всего: ${sheet.total}`} size="small" />
+              <Chip label={`Барлығы: ${sheet.total}`} size="small" />
               <Chip label={`OK: ${sheet.valid}`} size="small" color="success" />
-              {sheet.warnings > 0 && <Chip label={`Предупреждений: ${sheet.warnings}`} size="small" color="warning" />}
-              {sheet.errors   > 0 && <Chip label={`Ошибок: ${sheet.errors}`}           size="small" color="error"   />}
+              {sheet.warnings > 0 && <Chip label={`Ескертулер: ${sheet.warnings}`} size="small" color="warning" />}
+              {sheet.errors   > 0 && <Chip label={`Қателер: ${sheet.errors}`}     size="small" color="error"   />}
             </Stack>
             <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 340 }}>
               <Table size="small" stickyHeader>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem', color: '#94a3b8', bgcolor: '#f8fafc' }}>Строка</TableCell>
-                    <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem', color: '#94a3b8', bgcolor: '#f8fafc' }}>Статус</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem', color: '#94a3b8', bgcolor: '#f8fafc' }}>Жол</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem', color: '#94a3b8', bgcolor: '#f8fafc' }}>Күйі</TableCell>
                     {cols.map(c => (
                       <TableCell key={c} sx={{ fontWeight: 700, fontSize: '0.7rem', color: '#94a3b8', bgcolor: '#f8fafc', textTransform: 'uppercase' }}>
                         {c}
@@ -127,19 +127,19 @@ export default function ImportDialog({ open, onClose, onSuccess, sheetType, titl
         {step === 'done' && result && (
           <Stack alignItems="center" spacing={2} py={3}>
             <CheckCircleIcon sx={{ fontSize: 52, color: '#16a34a' }} />
-            <Typography sx={{ fontWeight: 700, color: '#1a2540' }}>Импорт завершён</Typography>
+            <Typography sx={{ fontWeight: 700, color: '#1a2540' }}>Импорт аяқталды</Typography>
             <Stack direction="row" spacing={4}>
               <Box textAlign="center">
                 <Typography sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '1.8rem', fontWeight: 700, color: '#16a34a' }}>
                   {result.imported}
                 </Typography>
-                <Typography sx={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>импортировано</Typography>
+                <Typography sx={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>импортталды</Typography>
               </Box>
               <Box textAlign="center">
                 <Typography sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '1.8rem', fontWeight: 700, color: '#d97706' }}>
                   {result.skipped}
                 </Typography>
-                <Typography sx={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>пропущено</Typography>
+                <Typography sx={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>өткізілді</Typography>
               </Box>
             </Stack>
             {result.details?.map((d, i) => (
@@ -150,16 +150,16 @@ export default function ImportDialog({ open, onClose, onSuccess, sheetType, titl
       </DialogContent>
 
       <DialogActions>
-        {step === 'idle'    && <Button onClick={handleClose}>Отмена</Button>}
+        {step === 'idle'    && <Button onClick={handleClose}>Болдырмау</Button>}
         {step === 'preview' && <>
-          <Button onClick={reset} disabled={loading}>Назад</Button>
-          <Button variant="contained" onClick={handleConfirm} disabled={loading || (sheet?.valid ?? 0) === 0}>
-            Подтвердить импорт ({sheet?.valid ?? 0} строк)
+          <Button onClick={reset} disabled={loading}>Артқа</Button>
+          <Button variant="contained" onClick={handleConfirm} disabled={loading || ((sheet?.valid ?? 0) + (sheet?.warnings ?? 0)) === 0}>
+            Импортты растау ({(sheet?.valid ?? 0) + (sheet?.warnings ?? 0)} жол)
           </Button>
         </>}
         {step === 'done' && <>
-          <Button onClick={reset}>Ещё импорт</Button>
-          <Button variant="contained" onClick={handleClose}>Закрыть</Button>
+          <Button onClick={reset}>Тағы импорттау</Button>
+          <Button variant="contained" onClick={handleClose}>Жабу</Button>
         </>}
       </DialogActions>
     </Dialog>

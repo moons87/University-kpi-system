@@ -84,7 +84,7 @@ export default function SettingsPage() {
   if (!isAdmin && !isAdvisor) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="h5" color="error">Access Denied</Typography>
+        <Typography variant="h5" color="error">Қол жетімділік жоқ</Typography>
       </Box>
     );
   }
@@ -95,19 +95,19 @@ export default function SettingsPage() {
 
   const handleKpiSave = () => {
     updateSettings({ settings: formData })
-      .then(() => setKpiMessage('Settings saved successfully. Recalculate KPIs for the new values to take effect.'))
-      .catch((err) => setKpiMessage('Error saving settings: ' + err.message));
+      .then(() => setKpiMessage('Параметрлер сәтті сақталды. Жаңа мәндер күшіне енуі үшін KPI-ды қайта есептеңіз.'))
+      .catch((err) => setKpiMessage('Параметрлерді сақтауда қате: ' + err.message));
   };
 
   const handleAddSubject = () => {
     setSubjectError('');
-    if (!newSubject.trim()) { setSubjectError('Subject name is required'); return; }
+    if (!newSubject.trim()) { setSubjectError('Пән атауы міндетті'); return; }
     createSubject({ name: newSubject.trim() })
       .then((created) => {
         setSubjects((prev) => [...prev, created]);
         setNewSubject('');
       })
-      .catch((err) => setSubjectError(err.response?.data?.detail || 'Error creating subject'));
+      .catch((err) => setSubjectError(err.response?.data?.detail || 'Пән жасауда қате'));
   };
 
   const handleAddPeriod = () => {
@@ -128,7 +128,7 @@ export default function SettingsPage() {
 
   const handleAddGroup = () => {
     setGroupError('');
-    if (!newGroup.name.trim()) { setGroupError('Group name is required'); return; }
+    if (!newGroup.name.trim()) { setGroupError('Топ атауы міндетті'); return; }
     createGroup({
       name: newGroup.name.trim(),
       education_level: newGroup.education_level.trim() || null,
@@ -138,7 +138,7 @@ export default function SettingsPage() {
         setGroups((prev) => [...prev, created]);
         setNewGroup({ name: '', education_level: '', advisor_id: null });
       })
-      .catch((err) => setGroupError(err.response?.data?.detail || 'Error creating group'));
+      .catch((err) => setGroupError(err.response?.data?.detail || 'Топ жасауда қате'));
   };
 
   const handleSaveAdvisor = (groupId, advisorId) => {
@@ -149,23 +149,23 @@ export default function SettingsPage() {
         setGroups((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
         setEditingGroup(null);
       })
-      .catch((err) => setGroupError(err.response?.data?.detail || 'Error saving advisor'));
+      .catch((err) => setGroupError(err.response?.data?.detail || 'Эдвайзерді сақтауда қате'));
   };
 
   return (
     <Box>
-      <Typography variant="h4" mb={2}>Settings</Typography>
+      <Typography variant="h4" mb={2}>Параметрлер</Typography>
 
       {isAdmin ? (
         <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3 }}>
-          <Tab label="KPI Settings" />
-          <Tab label="Subjects" />
-          <Tab label="Groups" />
-          <Tab label="Периоды" />
+          <Tab label="KPI параметрлері" />
+          <Tab label="Пәндер" />
+          <Tab label="Топтар" />
+          <Tab label="Кезеңдер" />
         </Tabs>
       ) : (
         <Tabs value={0} sx={{ mb: 3 }}>
-          <Tab label="Groups" />
+          <Tab label="Топтар" />
         </Tabs>
       )}
 
@@ -173,7 +173,7 @@ export default function SettingsPage() {
       {isAdmin && tab === 0 && (
         <>
           {kpiMessage && (
-            <Alert severity={kpiMessage.includes('Error') ? 'error' : 'success'} sx={{ mb: 2 }}>
+            <Alert severity={kpiMessage.includes('Қате') ? 'error' : 'success'} sx={{ mb: 2 }}>
               {kpiMessage}
             </Alert>
           )}
@@ -181,13 +181,13 @@ export default function SettingsPage() {
             <Grid item xs={12} md={6}>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" mb={2}>Category Weights</Typography>
-                  <Typography variant="body2" color="text.secondary" mb={2}>Must sum to 1.0 (100%)</Typography>
+                  <Typography variant="h6" mb={2}>Санат салмақтары</Typography>
+                  <Typography variant="body2" color="text.secondary" mb={2}>Жиыны 1.0 (100%) болуы керек</Typography>
                   {Object.keys(DEFAULT_WEIGHTS).map((k) => (
                     <TextField
                       key={`weight_${k}`}
                       fullWidth margin="dense"
-                      label={`Weight: ${k}`}
+                      label={`Салмақ: ${k}`}
                       type="number"
                       slotProps={{ htmlInput: { step: '0.05' } }}
                       value={formData[`weight_${k}`] ?? ''}
@@ -200,13 +200,13 @@ export default function SettingsPage() {
             <Grid item xs={12} md={6}>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" mb={2}>Max Values</Typography>
-                  <Typography variant="body2" color="text.secondary" mb={2}>Ceiling limits for 100% score</Typography>
+                  <Typography variant="h6" mb={2}>Максималды мәндер</Typography>
+                  <Typography variant="body2" color="text.secondary" mb={2}>100% баға үшін шекті мәндер</Typography>
                   {Object.keys(DEFAULT_MAX_VALUES).map((k) => (
                     <TextField
                       key={`max_${k}`}
                       fullWidth margin="dense"
-                      label={`Max: ${k}`}
+                      label={`Макс: ${k}`}
                       type="number"
                       value={formData[`max_${k}`] ?? ''}
                       onChange={(e) => handleKpiChange(`max_${k}`, e.target.value)}
@@ -217,7 +217,7 @@ export default function SettingsPage() {
             </Grid>
           </Grid>
           <Box mt={3} sx={{ textAlign: 'right' }}>
-            <Button variant="contained" size="large" onClick={handleKpiSave}>Save Settings</Button>
+            <Button variant="contained" size="large" onClick={handleKpiSave}>Параметрлерді сақтау</Button>
           </Box>
         </>
       )}
@@ -225,16 +225,16 @@ export default function SettingsPage() {
       {/* ── Subjects Tab ── */}
       {isAdmin && tab === 1 && (
         <Box>
-          <Typography variant="h6" mb={2}>Subjects</Typography>
+          <Typography variant="h6" mb={2}>Пәндер</Typography>
           {subjectError && <Alert severity="error" sx={{ mb: 2 }}>{subjectError}</Alert>}
           <Stack direction="row" spacing={2} mb={3} alignItems="center">
             <TextField
-              label="Subject name" size="small"
+              label="Пән атауы" size="small"
               value={newSubject}
               onChange={(e) => setNewSubject(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddSubject()}
             />
-            <Button variant="contained" onClick={handleAddSubject}>Add</Button>
+            <Button variant="contained" onClick={handleAddSubject}>Қосу</Button>
           </Stack>
           <List dense>
             {subjects.map((s) => (
@@ -249,33 +249,33 @@ export default function SettingsPage() {
       {/* ── Groups Tab ── */}
       {(isAdmin ? tab === 2 : true) && (
         <Box>
-          <Typography variant="h6" mb={2}>Groups</Typography>
+          <Typography variant="h6" mb={2}>Топтар</Typography>
           {groupError && <Alert severity="error" sx={{ mb: 2 }}>{groupError}</Alert>}
           <Stack direction="row" spacing={2} mb={3} alignItems="center" flexWrap="wrap">
             <TextField
-              label="Group name" size="small" required
+              label="Топ атауы" size="small" required
               value={newGroup.name}
               onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
             />
             <TextField
-              label="Education level (optional)" size="small"
+              label="Білім деңгейі (міндетті емес)" size="small"
               value={newGroup.education_level}
               onChange={(e) => setNewGroup({ ...newGroup, education_level: e.target.value })}
             />
             <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel>Advisor (optional)</InputLabel>
+              <InputLabel>Эдвайзер (міндетті емес)</InputLabel>
               <Select
-                label="Advisor (optional)"
+                label="Эдвайзер (міндетті емес)"
                 value={newGroup.advisor_id ?? ''}
                 onChange={(e) => setNewGroup({ ...newGroup, advisor_id: e.target.value || null })}
               >
-                <MenuItem value=""><em>Not assigned</em></MenuItem>
+                <MenuItem value=""><em>Тағайындалмаған</em></MenuItem>
                 {advisors.map((a) => (
                   <MenuItem key={a.id} value={a.id}>{a.email}</MenuItem>
                 ))}
               </Select>
             </FormControl>
-            <Button variant="contained" onClick={handleAddGroup}>Add</Button>
+            <Button variant="contained" onClick={handleAddGroup}>Қосу</Button>
           </Stack>
           <List dense>
             {groups.map((g) => {
@@ -300,7 +300,7 @@ export default function SettingsPage() {
                       secondary={
                         <>
                           {g.education_level && `${g.education_level} · `}
-                          {`ID: ${g.id} · Advisor: `}
+                          {`ID: ${g.id} · Эдвайзер: `}
                           <strong>{advisor ? advisor.email : '—'}</strong>
                         </>
                       }
@@ -308,13 +308,13 @@ export default function SettingsPage() {
                     {isEditing && (
                       <Stack direction="row" spacing={1} alignItems="center" mt={1} flexWrap="wrap">
                         <FormControl size="small" sx={{ minWidth: 180 }}>
-                          <InputLabel>Advisor</InputLabel>
+                          <InputLabel>Эдвайзер</InputLabel>
                           <Select
-                            label="Advisor"
+                            label="Эдвайзер"
                             value={editingGroup.advisor_id ?? ''}
                             onChange={(e) => setEditingGroup((prev) => ({ ...prev, advisor_id: e.target.value }))}
                           >
-                            <MenuItem value=""><em>Not assigned</em></MenuItem>
+                            <MenuItem value=""><em>Тағайындалмаған</em></MenuItem>
                             {advisors.map((a) => (
                               <MenuItem key={a.id} value={a.id}>{a.email}</MenuItem>
                             ))}
@@ -322,9 +322,9 @@ export default function SettingsPage() {
                         </FormControl>
                         <Button size="small" variant="contained"
                           onClick={() => handleSaveAdvisor(g.id, editingGroup.advisor_id)}>
-                          Save
+                          Сақтау
                         </Button>
-                        <Button size="small" onClick={() => setEditingGroup(null)}>Cancel</Button>
+                        <Button size="small" onClick={() => setEditingGroup(null)}>Болдырмау</Button>
                       </Stack>
                     )}
                   </Box>

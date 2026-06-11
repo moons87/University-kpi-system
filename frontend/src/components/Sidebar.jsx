@@ -15,25 +15,25 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 
 const NAV = [
-  { label: 'Dashboard',     icon: DashboardIcon,   path: '/',               group: 'overview' },
-  { label: 'Преподаватели', icon: PeopleIcon,       path: '/teachers',       group: 'data' },
-  { label: 'Студенты',     icon: GroupsIcon,       path: '/students',       group: 'data', advisorVisible: true },
-  { label: 'Импорт',       icon: FileUploadIcon,   path: '/import',         group: 'data', advisorVisible: true },
-  { label: 'Нагрузка',      icon: SchoolIcon,       path: '/teaching-load',  group: 'data' },
-  { label: 'Публикации',    icon: ArticleIcon,      path: '/publications',   group: 'data' },
-  { label: 'Патенты',       icon: BuildIcon,        path: '/patents',        group: 'data' },
-  { label: 'Достижения',    icon: EmojiEventsIcon,  path: '/achievements',   group: 'data' },
-  { label: 'Проекты',       icon: AssignmentIcon,   path: '/projects',       group: 'data' },
-  { label: 'KPI',           icon: BarChartIcon,     path: '/kpi',            group: 'analytics' },
-  { label: 'Отчёты',        icon: DownloadIcon,     path: '/reports',        group: 'analytics', adminOnly: true },
-  { label: 'Настройки',     icon: SettingsIcon,     path: '/settings',       group: 'system',    adminOnly: true },
+  { label: 'Басты бет',       icon: DashboardIcon,   path: '/',               group: 'overview' },
+  { label: 'Оқытушылар',      icon: PeopleIcon,       path: '/teachers',       group: 'data' },
+  { label: 'Студенттер',      icon: GroupsIcon,       path: '/students',       group: 'data', advisorVisible: true },
+  { label: 'Импорт',          icon: FileUploadIcon,   path: '/import',         group: 'data', advisorVisible: true },
+  { label: 'Жүктеме',         icon: SchoolIcon,       path: '/teaching-load',  group: 'data' },
+  { label: 'Жарияланымдар',   icon: ArticleIcon,      path: '/publications',   group: 'data' },
+  { label: 'Патенттер',       icon: BuildIcon,        path: '/patents',        group: 'data' },
+  { label: 'Жетістіктер',     icon: EmojiEventsIcon,  path: '/achievements',   group: 'data' },
+  { label: 'Жобалар',         icon: AssignmentIcon,   path: '/projects',       group: 'data' },
+  { label: 'KPI',             icon: BarChartIcon,     path: '/kpi',            group: 'analytics' },
+  { label: 'Есептер',         icon: DownloadIcon,     path: '/reports',        group: 'analytics', adminOnly: true },
+  { label: 'Параметрлер',     icon: SettingsIcon,     path: '/settings',       group: 'system',    adminOnly: true },
 ];
 
 const GROUP_LABELS = {
   overview:  null,
-  data:      'Данные',
+  data:      'Деректер',
   analytics: 'Аналитика',
-  system:    'Система',
+  system:    'Жүйе',
 };
 
 export default function Sidebar({ drawerWidth = 240, appBarHeight = 56 }) {

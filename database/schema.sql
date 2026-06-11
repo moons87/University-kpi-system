@@ -107,7 +107,11 @@ CREATE TABLE publications (
     teacher_id INT  NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
     time_id    INT  NOT NULL REFERENCES time_dim(id),
     title      TEXT NOT NULL,
-    type       VARCHAR(20) NOT NULL CHECK (type IN ('Scopus', 'WoS', 'local')),
+    type       VARCHAR(50) NOT NULL CHECK (type IN (
+                   'Scopus', 'WoS', 'Вестник', 'Конференция',
+                   'КОКСНВО', 'Международная конференция', 'Монография', 'Учебное пособие',
+                   'Зарубежные журналы'
+               )),
     quartile   VARCHAR(5)  CHECK (quartile IN ('Q1', 'Q2', 'Q3', 'Q4'))
 );
 
@@ -160,6 +164,6 @@ CREATE TABLE kpi_details (
     time_id     INT         NOT NULL REFERENCES time_dim(id),
     category    VARCHAR(50) NOT NULL,
     metric_name VARCHAR(100) NOT NULL,
-    value       DECIMAL(10, 2),
+    value       DECIMAL(20, 2),
     score       DECIMAL(5, 2)
 );

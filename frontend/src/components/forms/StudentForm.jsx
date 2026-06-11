@@ -20,8 +20,8 @@ const PAYMENT_FORMS = [
 ];
 
 const GENDERS = [
-  { value: 'male',   label: 'Мужской' },
-  { value: 'female', label: 'Женский' },
+  { value: 'male',   label: 'Еркек' },
+  { value: 'female', label: 'Әйел' },
 ];
 
 const EMPTY = {
@@ -78,56 +78,56 @@ export default function StudentForm({ open, onClose, onSave, initial }) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{initial ? 'Редактировать студента' : 'Добавить студента'}</DialogTitle>
+      <DialogTitle>{initial ? 'Студентті өңдеу' : 'Студент қосу'}</DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ pt: 1 }}>
           <Grid item xs={12}>
-            <TextField fullWidth required label="ФИО" size="small"
+            <TextField fullWidth required label="Аты-жөні" size="small"
               value={form.full_name} onChange={e => set('full_name', e.target.value)} />
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <TextField select fullWidth label="Группа" size="small"
+            <TextField select fullWidth label="Топ" size="small"
               value={form.group_id} onChange={e => set('group_id', e.target.value)}>
-              <MenuItem value="">— Без группы —</MenuItem>
+              <MenuItem value="">— Топсыз —</MenuItem>
               {groups.map(g => <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>)}
             </TextField>
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <TextField select fullWidth required label="Уровень обучения" size="small"
+            <TextField select fullWidth required label="Оқу деңгейі" size="small"
               value={form.education_level} onChange={e => set('education_level', e.target.value)}>
               {EDUCATION_LEVELS.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
             </TextField>
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <TextField fullWidth required label="Год поступления" size="small" type="number"
+            <TextField fullWidth required label="Түскен жылы" size="small" type="number"
               value={form.enrollment_year} onChange={e => set('enrollment_year', e.target.value)}
               slotProps={{ htmlInput: { min: 1990, max: 2100 } }} />
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <TextField fullWidth label="Откуда студент" size="small"
+            <TextField fullWidth label="Қайдан" size="small"
               value={form.origin} onChange={e => set('origin', e.target.value)} />
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <TextField fullWidth label="Язык обучения" size="small"
+            <TextField fullWidth label="Оқу тілі" size="small"
               value={form.language} onChange={e => set('language', e.target.value)} />
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <TextField select fullWidth required label="Форма обучения" size="small"
+            <TextField select fullWidth required label="Оқу нысаны" size="small"
               value={form.payment_form} onChange={e => set('payment_form', e.target.value)}>
               {PAYMENT_FORMS.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
             </TextField>
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <TextField select fullWidth label="Пол" size="small"
+            <TextField select fullWidth label="Жынысы" size="small"
               value={form.gender} onChange={e => set('gender', e.target.value)}>
-              <MenuItem value="">— Не указан —</MenuItem>
+              <MenuItem value="">— Көрсетілмеген —</MenuItem>
               {GENDERS.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
             </TextField>
           </Grid>
@@ -135,19 +135,19 @@ export default function StudentForm({ open, onClose, onSave, initial }) {
           <Grid item xs={12}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
               <Typography variant="body2" fontWeight={600} color="text.primary">
-                Оценки по предметам
+                Пәндер бойынша бағалар
               </Typography>
               <Button size="small" startIcon={<AddIcon />} onClick={addGrade}>
-                Добавить предмет
+                Пән қосу
               </Button>
             </Stack>
             {form.grades.map((g, i) => (
               <Stack key={i} direction="row" spacing={1} mb={1} alignItems="center">
-                <TextField select size="small" label="Предмет" sx={{ flex: 2 }}
+                <TextField select size="small" label="Пән" sx={{ flex: 2 }}
                   value={g.subject_id} onChange={e => setGrade(i, 'subject_id', e.target.value)}>
                   {subjects.map(s => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
                 </TextField>
-                <TextField size="small" label="Оценка" type="number" sx={{ flex: 1 }}
+                <TextField size="small" label="Баға" type="number" sx={{ flex: 1 }}
                   value={g.grade} onChange={e => setGrade(i, 'grade', e.target.value)}
                   slotProps={{ htmlInput: { min: 0, max: 100, step: 0.1 } }} />
                 <IconButton size="small" onClick={() => removeGrade(i)}>
@@ -159,9 +159,9 @@ export default function StudentForm({ open, onClose, onSave, initial }) {
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Отмена</Button>
+        <Button onClick={onClose}>Болдырмау</Button>
         <Button variant="contained" onClick={handleSave} disabled={!form.full_name.trim()}>
-          Сохранить
+          Сақтау
         </Button>
       </DialogActions>
     </Dialog>

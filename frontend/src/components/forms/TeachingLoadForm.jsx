@@ -47,22 +47,22 @@ export default function TeachingLoadFormDialog({ open, onClose, onSuccess }) {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Add Teaching Load</DialogTitle>
+      <DialogTitle>Оқу жүктемесін қосу</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <FormControl fullWidth margin="dense" required>
-            <InputLabel>Period</InputLabel>
-            <Select value={formData.time_id} label="Period"
+            <InputLabel>Кезең</InputLabel>
+            <Select value={formData.time_id} label="Кезең"
               onChange={(e) => setFormData({ ...formData, time_id: e.target.value })}>
               {periods.map((p) => (
-                <MenuItem key={p.id} value={p.id}>{p.year} - Sem {p.semester}</MenuItem>
+                <MenuItem key={p.id} value={p.id}>{p.year} — Сем {p.semester}</MenuItem>
               ))}
             </Select>
           </FormControl>
 
           <FormControl fullWidth margin="dense" required>
-            <InputLabel>Subject</InputLabel>
-            <Select value={formData.subject_id} label="Subject"
+            <InputLabel>Пән</InputLabel>
+            <Select value={formData.subject_id} label="Пән"
               onChange={(e) => setFormData({ ...formData, subject_id: e.target.value })}>
               {subjects.map((s) => (
                 <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
@@ -71,8 +71,8 @@ export default function TeachingLoadFormDialog({ open, onClose, onSuccess }) {
           </FormControl>
 
           <FormControl fullWidth margin="dense" required>
-            <InputLabel>Group</InputLabel>
-            <Select value={formData.group_id} label="Group"
+            <InputLabel>Топ</InputLabel>
+            <Select value={formData.group_id} label="Топ"
               onChange={(e) => setFormData({ ...formData, group_id: e.target.value })}>
               {groups.map((g) => (
                 <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>
@@ -81,14 +81,14 @@ export default function TeachingLoadFormDialog({ open, onClose, onSuccess }) {
           </FormControl>
 
           <TextField
-            fullWidth margin="dense" label="Hours" type="number" required
+            fullWidth margin="dense" label="Сағат" type="number" required
             value={formData.hours}
             onChange={(e) => setFormData({ ...formData, hours: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">Submit</Button>
+          <Button onClick={onClose}>Болдырмау</Button>
+          <Button type="submit" variant="contained">Жіберу</Button>
         </DialogActions>
       </form>
     </Dialog>

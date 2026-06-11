@@ -89,11 +89,11 @@ INSERT INTO achievements (teacher_id, time_id, title, level) VALUES
     (4, 3, 'National Mathematics Prize',        'national'),
     (5, 3, 'University Teaching Award',         'local');
 
--- Admin user (password: admin123 — bcrypt hash for dev only)
+-- Admin user (password: admin_uni_2024 — unique bcrypt hash, dev only, CHANGE IN PRODUCTION)
 INSERT INTO users (email, password_hash, role) VALUES
-    ('admin@uni.kz', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMqJqhN8/LeAiZ2RKbDxqH9xKa', 'admin');
+    ('admin@uni.kz', '$2b$12$aSmUSEfURI2QoivR35t/Yuwy.Vl906A7BwhYNiYW.Q.RuEkC1C.BK', 'admin');
 
--- Teacher users
+-- Teacher users (each has a unique password hash; passwords: teach_pass_secure / teach_pass_secure2)
 INSERT INTO users (teacher_id, email, password_hash, role) VALUES
-    (1, 'a.ivanov@uni.kz',  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMqJqhN8/LeAiZ2RKbDxqH9xKa', 'teacher'),
-    (2, 'm.petrova@uni.kz', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMqJqhN8/LeAiZ2RKbDxqH9xKa', 'teacher');
+    (1, 'a.ivanov@uni.kz',  '$2b$12$iw8jDtMmIrhtrP5TA1PoLegIHxHkbL7U/i0Bm5/cpyIT9NKrZOO76', 'teacher'),
+    (2, 'm.petrova@uni.kz', '$2b$12$DQQHka.WsGPQ17yQP/5xfeS3mDFeiyayEpgGC.RZlZGEGFD3PROuK', 'teacher');

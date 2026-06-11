@@ -12,8 +12,8 @@ import { getStudents, createStudent, updateStudent, deleteStudent } from '../api
 import useAuthStore from '../store/authStore';
 
 const LEVEL_LABEL  = { bachelor: 'Бакалавриат', master: 'Магистратура', doctoral: 'Докторантура' };
-const PAY_LABEL    = { grant: 'Грант', paid: 'Платник' };
-const GENDER_LABEL = { male: 'М', female: 'Ж' };
+const PAY_LABEL    = { grant: 'Грант', paid: 'Ақылы' };
+const GENDER_LABEL = { male: 'Е', female: 'Ә' };
 
 export default function StudentsPage() {
   const user    = useAuthStore(s => s.user);
@@ -24,7 +24,7 @@ export default function StudentsPage() {
   const [open,     setOpen]     = useState(false);
   const [editing,  setEditing]  = useState(null);
 
-  const load = () => getStudents().then(setStudents).catch(() => setError('Ошибка загрузки'));
+  const load = () => getStudents().then(setStudents).catch(() => setError('Жүктеуде қате'));
 
   useEffect(() => { load(); }, []);
 
@@ -39,17 +39,17 @@ export default function StudentsPage() {
       setEditing(null);
       load();
     } catch (e) {
-      setError(e.response?.data?.detail || 'Ошибка сохранения');
+      setError(e.response?.data?.detail || 'Сақтауда қате');
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Удалить студента?')) return;
+    if (!window.confirm('Студентті жою керек пе?')) return;
     try {
       await deleteStudent(id);
       load();
     } catch {
-      setError('Ошибка удаления');
+      setError('Жоюда қате');
     }
   };
 
@@ -58,15 +58,15 @@ export default function StudentsPage() {
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={3}>
         <Box>
           <Typography sx={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '1.75rem', fontWeight: 700, color: '#1a2540', lineHeight: 1.1 }}>
-            Студенты
+            Студенттер
           </Typography>
           <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8', mt: 0.25 }}>
-            Управление студентами и их успеваемостью
+            Студенттерді және үлгерімді басқару
           </Typography>
         </Box>
         {canEdit && (
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditing(null); setOpen(true); }}>
-            Добавить студента
+            Студент қосу
           </Button>
         )}
       </Stack>
@@ -77,22 +77,22 @@ export default function StudentsPage() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>ФИО</TableCell>
-              <TableCell>Уровень</TableCell>
-              <TableCell>Год поступления</TableCell>
-              <TableCell>Откуда</TableCell>
-              <TableCell>Язык</TableCell>
-              <TableCell>Форма</TableCell>
-              <TableCell>Пол</TableCell>
-              <TableCell>Оценок</TableCell>
-              {canEdit && <TableCell align="right">Действия</TableCell>}
+              <TableCell>Аты-жөні</TableCell>
+              <TableCell>Деңгейі</TableCell>
+              <TableCell>Түскен жылы</TableCell>
+              <TableCell>Қайдан</TableCell>
+              <TableCell>Тіл</TableCell>
+              <TableCell>Нысаны</TableCell>
+              <TableCell>Жынысы</TableCell>
+              <TableCell>Бағалар</TableCell>
+              {canEdit && <TableCell align="right">Әрекеттер</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {students.length === 0 && (
               <TableRow>
                 <TableCell colSpan={9} align="center" sx={{ py: 4, color: '#94a3b8', fontSize: '0.85rem' }}>
-                  Студентов пока нет
+                  Студенттер әлі жоқ
                 </TableCell>
               </TableRow>
             )}
@@ -116,12 +116,12 @@ export default function StudentsPage() {
                 <TableCell>{s.grades?.length ?? 0}</TableCell>
                 {canEdit && (
                   <TableCell align="right">
-                    <Tooltip title="Редактировать">
+                    <Tooltip title="Өңдеу">
                       <IconButton size="small" onClick={() => { setEditing(s); setOpen(true); }}>
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Удалить">
+                    <Tooltip title="Жою">
                       <IconButton size="small" color="error" onClick={() => handleDelete(s.id)}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>

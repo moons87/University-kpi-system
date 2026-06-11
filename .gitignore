@@ -1,5 +1,51 @@
-backend/.env
-__pycache__/
-*.pyc
-*.pyo
+# ---- Secrets / env ----
 .env
+*.env
+!*.env.example
+backend/.env
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---- Node / Frontend ----
+node_modules/
+frontend/build/
+frontend/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ---- ETL generated exports ----
+etl/exports/
+
+# ---- IDE / OS ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---- Claude Code local settings ----
+.claude/settings.local.json
+
+# ---- Internal docs / reports ----
+docs/superpowers/
+security_report.docx
+
+# ---- Logs ----
+*.log

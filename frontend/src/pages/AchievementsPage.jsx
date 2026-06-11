@@ -28,10 +28,10 @@ export default function AchievementsPage() {
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5">Achievements</Typography>
+        <Typography variant="h5">Жетістіктер</Typography>
         <Stack direction="row" spacing={2} alignItems="center">
           {user?.role === 'teacher' && (
-            <Button variant="contained" onClick={() => setOpenForm(true)}>Add New</Button>
+            <Button variant="contained" onClick={() => setOpenForm(true)}>Жаңа жазба</Button>
           )}
           <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setOpenImport(true)}>
             Импорт
@@ -42,9 +42,9 @@ export default function AchievementsPage() {
       <DataGrid
         rows={rows}
         columns={[
-          { field: 'teacher_id', headerName: 'Teacher', width: 100 },
-          { field: 'title',      headerName: 'Title',   flex: 2 },
-          { field: 'level',      headerName: 'Level',   width: 140 },
+          { field: 'teacher_id', headerName: 'Оқытушы',   width: 100 },
+          { field: 'title',      headerName: 'Атауы',    flex: 2 },
+          { field: 'level',      headerName: 'Деңгейі',  width: 140 },
         ]}
         loading={loading}
         autoHeight
@@ -57,7 +57,7 @@ export default function AchievementsPage() {
         onClose={() => setOpenImport(false)}
         onSuccess={loadData}
         sheetType="achievements"
-        title="Импорт достижений"
+        title="Жетістіктерді импорттау"
       />
     </Box>
   );

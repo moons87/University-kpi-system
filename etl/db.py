@@ -9,10 +9,12 @@ from sqlalchemy.orm import Session, sessionmaker
 _ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backend", ".env")
 load_dotenv(_ENV_PATH)
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:password@localhost:5432/university_analytics",
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise EnvironmentError(
+        "DATABASE_URL environment variable is not set. "
+        "ETL cannot start without an explicit database connection string."
+    )
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
