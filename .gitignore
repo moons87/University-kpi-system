@@ -44,7 +44,8 @@ Thumbs.db
 .claude/settings.local.json
 
 # ---- Internal docs / reports ----
-docs/superpowers/
+docs/
+CLAUDE.md
 security_report.docx
 
 # ---- Logs ----
