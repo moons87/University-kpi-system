@@ -39,7 +39,7 @@ INSERT INTO subjects (name) VALUES
     ('Calculus');
 
 -- Groups
-INSERT INTO groups (name, education_level) VALUES
+INSERT INTO `groups` (name, education_level) VALUES
     ('CS-101', 'bachelor'),
     ('CS-201', 'bachelor'),
     ('CS-301', 'bachelor'),

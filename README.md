@@ -43,10 +43,10 @@
 |------|-----------|
 | Frontend | React 18, MUI v7, Recharts / MUI X Charts |
 | Backend | FastAPI, SQLAlchemy, Pydantic v2 |
-| База данных | PostgreSQL |
+| База данных | MySQL 8 |
 | Аутентификация | JWT Bearer (python-jose + passlib) |
 | ETL | Pandas + SQLAlchemy |
-| BI | Power BI (прямое подключение к PostgreSQL + CSV-экспорт) |
+| BI | Power BI (прямое подключение к MySQL + CSV-экспорт) |
 
 ---
 
@@ -64,8 +64,10 @@
 
 ### 1. База данных
 ```bash
-psql -U postgres -c "CREATE DATABASE university_analytics;"
-psql -U postgres -d university_analytics -f database/schema.sql
+mysql -u root -p -e "CREATE DATABASE university_analytics CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -p university_analytics < database/schema.sql
+mysql -u root -p university_analytics < database/seed.sql
+mysql -u root -p university_analytics < database/migrations/add_analytics_tables.sql
 ```
 
 ### 2. Backend
@@ -138,7 +140,7 @@ university-analytics/
 Создайте файл `backend/.env`:
 
 ```env
-DATABASE_URL=postgresql://postgres:password@localhost:5432/university_analytics
+DATABASE_URL=mysql+pymysql://root:password@localhost:3306/university_analytics?charset=utf8mb4
 SECRET_KEY=your-jwt-secret-key-here
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30

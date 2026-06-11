@@ -51,13 +51,12 @@ def run_etl(year: int, semester: int, trigger: str = "cli") -> dict:
 
     try:
         # Record run start
-        row = db.execute(text("""
-            INSERT INTO etl_runs (year, semester, trigger, started_at, status)
+        result = db.execute(text("""
+            INSERT INTO etl_runs (year, semester, `trigger`, started_at, status)
             VALUES (:year, :semester, :trigger, NOW(), 'running')
-            RETURNING id
         """), {"year": year, "semester": semester, "trigger": trigger})
+        run_id = result.lastrowid
         db.commit()
-        run_id = row.scalar()
 
         # Step 1 — KPI scores (commits internally)
         calculate_kpi(year, semester, db)

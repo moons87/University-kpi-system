@@ -1,2 +1,2 @@
--- Fix numeric overflow for large project budgets in kpi_details
-ALTER TABLE kpi_details ALTER COLUMN value TYPE DECIMAL(20, 2);
+-- Fix numeric overflow for large project budgets in kpi_details (MySQL)
+ALTER TABLE kpi_details MODIFY COLUMN value DECIMAL(20, 2);

@@ -1,169 +1,194 @@
 -- =============================================================
--- University Analytics Platform — Database Schema
+-- University Analytics Platform — Database Schema (MySQL 8+)
 -- =============================================================
 
--- Clean slate (for re-running during development)
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS kpi_details CASCADE;
-DROP TABLE IF EXISTS kpi_scores CASCADE;
-DROP TABLE IF EXISTS projects CASCADE;
-DROP TABLE IF EXISTS achievements CASCADE;
-DROP TABLE IF EXISTS patents CASCADE;
-DROP TABLE IF EXISTS publications CASCADE;
-DROP TABLE IF EXISTS teaching_load CASCADE;
-DROP TABLE IF EXISTS groups CASCADE;
-DROP TABLE IF EXISTS subjects CASCADE;
-DROP TABLE IF EXISTS teachers CASCADE;
-DROP TABLE IF EXISTS time_dim CASCADE;
-DROP TABLE IF EXISTS departments CASCADE;
-DROP TABLE IF EXISTS degrees CASCADE;
-DROP TABLE IF EXISTS positions CASCADE;
+-- Clean slate (for re-running during development).
+-- MySQL has no DROP TABLE ... CASCADE; disable FK checks instead.
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS kpi_details;
+DROP TABLE IF EXISTS kpi_scores;
+DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS achievements;
+DROP TABLE IF EXISTS patents;
+DROP TABLE IF EXISTS publications;
+DROP TABLE IF EXISTS teaching_load;
+DROP TABLE IF EXISTS `groups`;
+DROP TABLE IF EXISTS subjects;
+DROP TABLE IF EXISTS teachers;
+DROP TABLE IF EXISTS time_dim;
+DROP TABLE IF EXISTS departments;
+DROP TABLE IF EXISTS degrees;
+DROP TABLE IF EXISTS positions;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- =======================
 -- DIMENSIONS (LOOKUP TABLES)
 -- =======================
 
 CREATE TABLE positions (
-    id   SERIAL PRIMARY KEY,
+    id   INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE degrees (
-    id   SERIAL PRIMARY KEY,
+    id   INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE departments (
-    id   SERIAL PRIMARY KEY,
+    id   INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(200) NOT NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE time_dim (
-    id       SERIAL PRIMARY KEY,
+    id       INT AUTO_INCREMENT PRIMARY KEY,
     year     INT NOT NULL,
     semester INT NOT NULL CHECK (semester IN (1, 2)),
     quarter  INT          CHECK (quarter  IN (1, 2, 3, 4)),
     UNIQUE (year, semester)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =======================
 -- MAIN ENTITY
 -- =======================
 
 CREATE TABLE teachers (
-    id            SERIAL PRIMARY KEY,
+    id            INT AUTO_INCREMENT PRIMARY KEY,
     full_name     VARCHAR(200) NOT NULL,
     email         VARCHAR(200) UNIQUE,
-    position_id   INT REFERENCES positions(id),
-    degree_id     INT REFERENCES degrees(id),
-    department_id INT REFERENCES departments(id),
-    created_at    TIMESTAMP DEFAULT NOW()
-);
+    position_id   INT,
+    degree_id     INT,
+    department_id INT,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (position_id)   REFERENCES positions(id),
+    FOREIGN KEY (degree_id)     REFERENCES degrees(id),
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =======================
 -- AUTH SYSTEM
 -- =======================
 
 CREATE TABLE users (
-    id            SERIAL PRIMARY KEY,
-    teacher_id    INT REFERENCES teachers(id),
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id    INT,
     email         VARCHAR(200) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role          VARCHAR(20) NOT NULL DEFAULT 'teacher'
-                  CHECK (role IN ('admin', 'teacher', 'advisor'))
-);
+                  CHECK (role IN ('admin', 'teacher', 'advisor')),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =======================
 -- ACADEMIC ACTIVITIES
 -- =======================
 
 CREATE TABLE subjects (
-    id   SERIAL PRIMARY KEY,
+    id   INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(200) NOT NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE groups (
-    id              SERIAL PRIMARY KEY,
+-- `groups` is a reserved word in MySQL 8 — must be quoted.
+CREATE TABLE `groups` (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
     name            VARCHAR(100) NOT NULL,
     education_level VARCHAR(50),  -- bachelor, master, phd
-    advisor_id      INT REFERENCES users(id) ON DELETE SET NULL
-);
+    advisor_id      INT,
+    FOREIGN KEY (advisor_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE teaching_load (
-    id         SERIAL PRIMARY KEY,
-    teacher_id INT NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
-    subject_id INT NOT NULL REFERENCES subjects(id),
-    group_id   INT NOT NULL REFERENCES groups(id),
-    time_id    INT NOT NULL REFERENCES time_dim(id),
-    hours      INT NOT NULL CHECK (hours > 0)
-);
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT NOT NULL,
+    subject_id INT NOT NULL,
+    group_id   INT NOT NULL,
+    time_id    INT NOT NULL,
+    hours      INT NOT NULL CHECK (hours > 0),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES subjects(id),
+    FOREIGN KEY (group_id)   REFERENCES `groups`(id),
+    FOREIGN KEY (time_id)    REFERENCES time_dim(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =======================
 -- RESEARCH ACTIVITY
 -- =======================
 
 CREATE TABLE publications (
-    id         SERIAL PRIMARY KEY,
-    teacher_id INT  NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
-    time_id    INT  NOT NULL REFERENCES time_dim(id),
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT  NOT NULL,
+    time_id    INT  NOT NULL,
     title      TEXT NOT NULL,
     type       VARCHAR(50) NOT NULL CHECK (type IN (
                    'Scopus', 'WoS', 'Вестник', 'Конференция',
                    'КОКСНВО', 'Международная конференция', 'Монография', 'Учебное пособие',
                    'Зарубежные журналы'
                )),
-    quartile   VARCHAR(5)  CHECK (quartile IN ('Q1', 'Q2', 'Q3', 'Q4'))
-);
+    quartile   VARCHAR(5)  CHECK (quartile IN ('Q1', 'Q2', 'Q3', 'Q4')),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (time_id)    REFERENCES time_dim(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE patents (
-    id                  SERIAL PRIMARY KEY,
-    teacher_id          INT  NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
-    time_id             INT  NOT NULL REFERENCES time_dim(id),
+    id                  INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id          INT  NOT NULL,
+    time_id             INT  NOT NULL,
     title               TEXT NOT NULL,
-    registration_number VARCHAR(100)
-);
+    registration_number VARCHAR(100),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (time_id)    REFERENCES time_dim(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE achievements (
-    id         SERIAL PRIMARY KEY,
-    teacher_id INT  NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
-    time_id    INT  NOT NULL REFERENCES time_dim(id),
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT  NOT NULL,
+    time_id    INT  NOT NULL,
     title      TEXT NOT NULL,
-    level      VARCHAR(20) NOT NULL CHECK (level IN ('international', 'national', 'local'))
-);
+    level      VARCHAR(20) NOT NULL CHECK (level IN ('international', 'national', 'local')),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (time_id)    REFERENCES time_dim(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE projects (
-    id             SERIAL PRIMARY KEY,
-    teacher_id     INT  NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
-    time_id        INT  NOT NULL REFERENCES time_dim(id),
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id     INT  NOT NULL,
+    time_id        INT  NOT NULL,
     title          TEXT NOT NULL,
     funding_source VARCHAR(200),
     budget         DECIMAL(15, 2),
     start_date     DATE,
-    end_date       DATE
-);
+    end_date       DATE,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (time_id)    REFERENCES time_dim(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =======================
 -- KPI SYSTEM
 -- =======================
 
 CREATE TABLE kpi_scores (
-    id                SERIAL PRIMARY KEY,
-    teacher_id        INT NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
-    time_id           INT NOT NULL REFERENCES time_dim(id),
+    id                INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id        INT NOT NULL,
+    time_id           INT NOT NULL,
     teaching_score    DECIMAL(5, 2),
     research_score    DECIMAL(5, 2),
     project_score     DECIMAL(5, 2),
     achievement_score DECIMAL(5, 2),
     total_score       DECIMAL(5, 2),
-    UNIQUE (teacher_id, time_id)
-);
+    UNIQUE (teacher_id, time_id),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (time_id)    REFERENCES time_dim(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE kpi_details (
-    id          SERIAL PRIMARY KEY,
-    teacher_id  INT         NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
-    time_id     INT         NOT NULL REFERENCES time_dim(id),
-    category    VARCHAR(50) NOT NULL,
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id  INT          NOT NULL,
+    time_id     INT          NOT NULL,
+    category    VARCHAR(50)  NOT NULL,
     metric_name VARCHAR(100) NOT NULL,
     value       DECIMAL(20, 2),
-    score       DECIMAL(5, 2)
-);
+    score       DECIMAL(5, 2),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (time_id)    REFERENCES time_dim(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

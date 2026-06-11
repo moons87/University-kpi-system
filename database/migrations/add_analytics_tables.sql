@@ -1,18 +1,18 @@
 CREATE TABLE IF NOT EXISTS etl_runs (
-    id            SERIAL PRIMARY KEY,
+    id            INT AUTO_INCREMENT PRIMARY KEY,
     year          INT         NOT NULL,
     semester      INT         NOT NULL CHECK (semester IN (1, 2)),
-    trigger       VARCHAR(20) NOT NULL CHECK (trigger IN ('cli', 'api', 'scheduler')),
-    started_at    TIMESTAMP   NOT NULL DEFAULT NOW(),
-    finished_at   TIMESTAMP,
+    `trigger`     VARCHAR(20) NOT NULL CHECK (`trigger` IN ('cli', 'api', 'scheduler')),
+    started_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    finished_at   TIMESTAMP   NULL,
     status        VARCHAR(20) NOT NULL DEFAULT 'running'
                   CHECK (status IN ('running', 'done', 'error')),
     error_message TEXT
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS analytics_teacher_kpi (
-    id                SERIAL PRIMARY KEY,
-    teacher_id        INT          NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
+    id                INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id        INT          NOT NULL,
     teacher_name      VARCHAR(200),
     department_name   VARCHAR(200),
     position_name     VARCHAR(100),
@@ -32,13 +32,14 @@ CREATE TABLE IF NOT EXISTS analytics_teacher_kpi (
     ach_intl          INT,
     ach_natl          INT,
     ach_local         INT,
-    updated_at        TIMESTAMP DEFAULT NOW(),
-    UNIQUE (teacher_id, year, semester)
-);
+    updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (teacher_id, year, semester),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS analytics_dept_summary (
-    id              SERIAL PRIMARY KEY,
-    department_id   INT          NOT NULL REFERENCES departments(id) ON DELETE CASCADE,
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    department_id   INT          NOT NULL,
     department_name VARCHAR(200),
     year            INT          NOT NULL,
     semester        INT          NOT NULL,
@@ -50,13 +51,14 @@ CREATE TABLE IF NOT EXISTS analytics_dept_summary (
     avg_research    DECIMAL(5,2),
     avg_project     DECIMAL(5,2),
     avg_achievement DECIMAL(5,2),
-    updated_at      TIMESTAMP DEFAULT NOW(),
-    UNIQUE (department_id, year, semester)
-);
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (department_id, year, semester),
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS analytics_rankings (
-    id           SERIAL PRIMARY KEY,
-    teacher_id   INT          NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id   INT          NOT NULL,
     teacher_name VARCHAR(200),
     dept_name    VARCHAR(200),
     year         INT          NOT NULL,
@@ -64,19 +66,21 @@ CREATE TABLE IF NOT EXISTS analytics_rankings (
     rank_overall INT          NOT NULL,
     rank_in_dept INT          NOT NULL,
     total_score  DECIMAL(5,2),
-    updated_at   TIMESTAMP DEFAULT NOW(),
-    UNIQUE (teacher_id, year, semester)
-);
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (teacher_id, year, semester),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS analytics_trends (
-    id           SERIAL PRIMARY KEY,
-    teacher_id   INT          NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id   INT          NOT NULL,
     teacher_name VARCHAR(200),
     year         INT          NOT NULL,
     semester     INT          NOT NULL,
     total_score  DECIMAL(5,2),
     prev_score   DECIMAL(5,2),
     delta        DECIMAL(5,2),
-    updated_at   TIMESTAMP DEFAULT NOW(),
-    UNIQUE (teacher_id, year, semester)
-);
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (teacher_id, year, semester),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
